@@ -1,0 +1,61 @@
+<resources>
+    <string name="app_name" >Mediterraneabus Timetable</string>
+
+    <!-- main_warning -->
+    <string name="title">Warning</string>
+    <string name="content">The app was created unofficially MEDITERRANEABUS SPA. is not responsible in any way</string>
+    <string name="positiveTextButton">I have read and accept the terms</string>
+
+    <!-- MainActivity -->
+    <string name="arrival">Arrival</string>
+    <string name="departure">Departure</string>
+    <string name="errorconnection">No internet connection</string>
+    <string name="not_school_hours">Not School</string>
+    <string name="recent">Recent</string>
+    <string name="school_hours">School</string>
+    <string name="search">Search</string>
+    <string name="toast_departure_arrival">Enter departure and arrival</string>
+
+    <!-- nav_header_main -->
+    <string name="info">Information</string>
+    <string name="menu" translatable="false">Menu</string>
+    <string name="search_bus">Search timetable</string>
+    <string name="settings">Settings</string>
+    <string name="settings_alert">What more do you want?</string>
+
+    <!-- SearchActivity -->
+    <string name="choose_route">Choose route</string>
+    <string name="nearest">Nearest</string>
+
+    <!-- HoursActivity -->
+    <string name="solutions">Solutions</string>
+    <string name="sort">Sort order</string>
+    <string name="timetable_not_found">Timetable not found</string>
+
+    <!-- InfoActivity -->
+    <string name="version">Version</string>
+    <string name="translate">Translations</string>
+    <string name="source_code">Source Code</string>
+    <string name="donate">Donate</string>
+    <string name="changelog">Changelog</string>
+    <string name="author">Author</string>
+
+    <!-- delete_recent_timetable -->
+    <string name="delete">Delete</string>
+    <string name="no" translatable="false">No</string>
+    <string name="yes">Yes</string>
+
+    <!-- changelog -->
+    <string name="news">News</string>
+    <string name="errorchangelog">Error loading changelog</string>
+    <string name="close">Close</string>
+
+    <!-- shortcut -->
+    <string name="shortcut1">@string/info</string>
+    <string name="shortcut1_long">@string/info</string>
+    <string name="shortcut1_disabled">Disabled shortcut 1</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+</resources>

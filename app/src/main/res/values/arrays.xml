@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="preference_values">
+        <item>Departure Time</item>
+        <item>Number line</item>
+    </string-array>
+
+</resources>
