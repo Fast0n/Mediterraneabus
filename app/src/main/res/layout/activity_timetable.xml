@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.fast0n.mediterraneabus.MainActivity">
+    tools:context=".timetables.TimetablesActivity">
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
@@ -20,16 +20,7 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <include layout="@layout/content_main" />
-
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/floatingActionButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="@dimen/fab_margin"
-        android:src="@drawable/ic_search"
-        app:layout_anchor="@id/cardView"
-        app:layout_anchorGravity="bottom|end" />
+    <include layout="@layout/content_timetable" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab1"
@@ -42,7 +33,7 @@
         app:elevation="6dp"
         app:backgroundTint="@color/colorAccent"
         app:pressedTranslationZ="12dp"
-        android:src="@drawable/ic_bin" />
+        android:src="@drawable/ic_share" />
     <android.support.design.widget.FloatingActionButton
         android:visibility="invisible"
         android:id="@+id/fab"

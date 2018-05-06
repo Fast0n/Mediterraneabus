@@ -6,15 +6,22 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.android.volley.Request;
@@ -43,6 +50,7 @@ import java.util.Objects;
 
 public class TimetablesActivity extends AppCompatActivity {
 
+    ActionBar actionBar;
     AdView mAdView;
     ArrayList<DataTimetables> dataHours;
     ListView listView;
@@ -51,33 +59,47 @@ public class TimetablesActivity extends AppCompatActivity {
     SharedPreferences.Editor editor;
     String departure, arrival, period;
     String sort;
+    Toolbar toolbar;
+    private Animation fab_open, fab_close, rotate_forward, rotate_backward;
+    private Boolean isFabOpen = false;
     private CustomAdapterTimetables adapter;
+    private FloatingActionButton fab, fab1;
     private InterstitialAd mInterstitialAd;
+    final int[] select = { 1 };
 
     @SuppressLint("CommitPrefEdits")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_timetables);
+        setContentView(R.layout.activity_timetable);
+        toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
         // set title activity in the toolbar
         Objects.requireNonNull(getSupportActionBar()).setTitle(getString(R.string.solutions));
 
         // set color/text/icon in the task
         Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher_foreground);
-        ActivityManager.TaskDescription taskDesc = new ActivityManager.TaskDescription(getString(R.string.solutions), bm,
-                getResources().getColor(R.color.task));
+        ActivityManager.TaskDescription taskDesc = new ActivityManager.TaskDescription(getString(R.string.solutions),
+                bm, getResources().getColor(R.color.task));
         TimetablesActivity.this.setTaskDescription(taskDesc);
 
         // set row icon in the toolbar
-        ActionBar actionBar = getSupportActionBar();
+        actionBar = getSupportActionBar();
         actionBar.setHomeButtonEnabled(true);
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setDisplayShowHomeEnabled(true);
 
         // java addresses
+        fab = findViewById(R.id.fab);
+        fab1 = findViewById(R.id.fab1);
+        fab_close = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fab_close);
+        fab_open = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fab_open);
         listView = findViewById(R.id.list);
-        mAdView = findViewById(R.id.adView1);
         loading = findViewById(R.id.progressBar);
+        mAdView = findViewById(R.id.adView1);
+        rotate_backward = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_backward);
+        rotate_forward = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_forward);
 
         settings = getSharedPreferences("sharedPreferences", 0);
         editor = settings.edit();
@@ -113,10 +135,39 @@ public class TimetablesActivity extends AppCompatActivity {
 
         get(url);
 
+        fab1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final String share = settings.getString("share", null);
+
+                Intent sendIntent = new Intent();
+                sendIntent.setAction(Intent.ACTION_SEND);
+                sendIntent.putExtra(Intent.EXTRA_TEXT, share);
+                sendIntent.setType("text/plain");
+                startActivity(sendIntent);
+
+                Objects.requireNonNull(getSupportActionBar()).setTitle(getString(R.string.solutions));
+                actionBar.setHomeAsUpIndicator(R.drawable.ic_arrow_back);
+                fab.hide();
+                animateFAB();
+
+                final String url = "https://mediterraneabus-api.herokuapp.com/?periodo=invernale&percorso_linea="
+                        + departure + "&percorso_linea1=" + arrival + "&sort_by=time";
+
+                get(url);
+
+                editor.putString("share", null);
+                editor.apply();
+
+
+            }
+        });
+
     }
 
     public void get(String url) {
 
+        url = url.replaceAll(" ", "%20");
         RequestQueue queue = Volley.newRequestQueue(this);
 
         JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.GET, url, null,
@@ -148,8 +199,8 @@ public class TimetablesActivity extends AppCompatActivity {
                                     String partenza = scorrOrari.getString("partenza");
                                     String arrivo = scorrOrari.getString("arrivo");
 
-                                    @SuppressLint
-                                    ("SimpleDateFormat") SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm");
+                                    @SuppressLint("SimpleDateFormat")
+                                    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm");
                                     Date startDate = simpleDateFormat.parse(partenza);
                                     Date endDate = simpleDateFormat.parse(arrivo);
 
@@ -172,8 +223,8 @@ public class TimetablesActivity extends AppCompatActivity {
                                         ora = "0" + hours;
                                     }
 
-                                    dataHours.add(new DataTimetables(nomeCorsa, partenza, arrivo, departure,
-                                            arrival, ora + ":" + min));
+                                    dataHours.add(new DataTimetables(nomeCorsa, partenza, arrivo, departure, arrival,
+                                            ora + ":" + min));
 
                                 }
 
@@ -202,12 +253,66 @@ public class TimetablesActivity extends AppCompatActivity {
                         listView.setAdapter(adapter);
 
                         loading.setVisibility(View.INVISIBLE);
+
                     }
                 });
 
         // add it to the RequestQueue
         queue.add(getRequest);
 
+        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int position, long id) {
+                if(select[0] == 1){
+
+                    adapterView.getChildAt(position).setBackgroundColor(Color.parseColor("#e0e0e0"));
+
+                    Objects.requireNonNull(getSupportActionBar()).setTitle(getString(R.string.share));
+                    actionBar.setHomeAsUpIndicator(R.drawable.ic_close);
+
+                    TextView ride = view.findViewById(R.id.ride);
+                    TextView time = view.findViewById(R.id.time);
+                    TextView name_time = view.findViewById(R.id.name_time);
+                    TextView time1 = view.findViewById(R.id.time1);
+                    TextView name_time1 = view.findViewById(R.id.name_time1);
+
+                    String share = "🚏 " + getString(R.string.departure) + " "
+                            + name_time.getText().toString().toUpperCase() + "\n" + ride.getText().toString() + "\n🕜"
+                            + getString(R.string.timetables) + " " + time.getText().toString() + " --> "
+                            + time1.getText().toString() + "\n" + getString(R.string.arrival) + " "
+                            + name_time1.getText().toString().toUpperCase();
+
+                    editor.putString("share", share);
+                    editor.commit();
+
+                    fab.show();
+                    animateFAB();
+                    select[0] = 2;
+                }
+
+                return false;
+            }
+        });
+
+    }
+
+    public void animateFAB() {
+
+        if (isFabOpen) {
+
+            fab.startAnimation(rotate_backward);
+            fab1.startAnimation(fab_close);
+            fab1.setClickable(false);
+            isFabOpen = false;
+
+        } else {
+
+            fab.startAnimation(rotate_forward);
+            fab1.startAnimation(fab_open);
+            fab1.setClickable(true);
+            isFabOpen = true;
+
+        }
     }
 
     @Override
@@ -224,13 +329,11 @@ public class TimetablesActivity extends AppCompatActivity {
 
         if (id == R.id.sort) {
 
-
             if (mInterstitialAd.isLoaded()) {
                 mInterstitialAd.show();
             } else {
                 Log.e("TAG", "The interstitial wasn't loaded yet.");
             }
-
 
             sort = settings.getString("sort", null);
             new MaterialDialog.Builder(this).title(getString(R.string.sort)).items(R.array.preference_values)
@@ -280,14 +383,34 @@ public class TimetablesActivity extends AppCompatActivity {
 
         switch (item.getItemId()) {
         case android.R.id.home:
-            finish();
-            settings.edit().remove("sort").apply();
 
-            Intent mainActivity = new Intent(TimetablesActivity.this, MainActivity.class);
-            mainActivity.putExtra("departure", departure);
-            mainActivity.putExtra("arrival", arrival);
-            mainActivity.putExtra("period", period);
-            startActivity(mainActivity);
+            final String share = settings.getString("share", null);
+
+            if (share != null) {
+
+                Objects.requireNonNull(getSupportActionBar()).setTitle(getString(R.string.solutions));
+                actionBar.setHomeAsUpIndicator(R.drawable.ic_arrow_back);
+                fab.hide();
+                animateFAB();
+
+                final String url = "https://mediterraneabus-api.herokuapp.com/?periodo=invernale&percorso_linea="
+                        + departure + "&percorso_linea1=" + arrival + "&sort_by=time";
+
+                get(url);
+
+                editor.putString("share", null);
+                editor.apply();
+
+            } else {
+                finish();
+                settings.edit().remove("sort").apply();
+
+                Intent mainActivity = new Intent(TimetablesActivity.this, MainActivity.class);
+                mainActivity.putExtra("departure", departure);
+                mainActivity.putExtra("arrival", arrival);
+                mainActivity.putExtra("period", period);
+                startActivity(mainActivity);
+            }
             return true;
         default:
             return super.onOptionsItemSelected(item);

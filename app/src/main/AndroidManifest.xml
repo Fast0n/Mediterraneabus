@@ -24,23 +24,25 @@
             </intent-filter>
 
             <!-- Sortcut Support -->
-            <meta-data android:name="android.app.shortcuts"
+            <meta-data
+                android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />
-            <!---->
+            <!--  -->
         </activity>
 
         <!-- [START firebase_iid_service] -->
-        <service
-            android:name=".java.MyFirebaseInstanceIDService">
+        <service android:name=".java.MyFirebaseInstanceIDService">
             <intent-filter>
-                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
             </intent-filter>
         </service>
         <!-- [END firebase_iid_service] -->
 
         <activity android:name=".search.SearchActivity" />
-        <activity android:name=".timetables.TimetablesActivity" />
-        <activity android:name=".info.InfoActivity"/>
+        <activity android:name=".info.InfoActivity" />
+        <activity
+            android:name=".timetables.TimetablesActivity"
+            android:theme="@style/AppTheme.NoActionBar"/>
     </application>
 
 </manifest>

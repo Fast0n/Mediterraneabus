@@ -26,10 +26,12 @@
     <string name="choose_route">Scegli Percorso</string>
     <string name="nearest">Nelle vicinanze</string>
 
-    <!-- HoursActivity -->
+    <!-- TimetableActivity -->
     <string name="solutions">Soluzioni</string>
     <string name="sort">Ordinamento</string>
     <string name="timetable_not_found">Orario non trovato</string>
+    <string name="share">Condividi</string>
+    <string name="timetables">Orari</string>
 
     <!-- InfoActivity -->
     <string name="version">Versione</string>
@@ -41,6 +43,7 @@
 
     <!-- delete_recent_timetable -->
     <string name="delete">Elimina</string>
+    <string name="sure">Sei sicuro?</string>
     <string name="yes">Si</string>
 
     <!-- changelog -->
@@ -52,8 +55,6 @@
     <string name="shortcut1">@string/info</string>
     <string name="shortcut1_long">@string/info</string>
     <string name="shortcut1_disabled">Disabled shortcut 1</string>
-
-
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>

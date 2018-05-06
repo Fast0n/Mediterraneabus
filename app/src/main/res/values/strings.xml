@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name" >Mediterraneabus Timetable</string>
+    <string name="app_name">Mediterraneabus Timetable</string>
 
     <!-- main_warning -->
     <string name="title">Warning</string>
@@ -27,10 +27,12 @@
     <string name="choose_route">Choose route</string>
     <string name="nearest">Nearest</string>
 
-    <!-- HoursActivity -->
+    <!-- TimetableActivity -->
     <string name="solutions">Solutions</string>
     <string name="sort">Sort order</string>
     <string name="timetable_not_found">Timetable not found</string>
+    <string name="share">Share</string>
+    <string name="timetables">Timetables</string>
 
     <!-- InfoActivity -->
     <string name="version">Version</string>
@@ -42,6 +44,7 @@
 
     <!-- delete_recent_timetable -->
     <string name="delete">Delete</string>
+    <string name="sure">Are you sure?</string>
     <string name="no" translatable="false">No</string>
     <string name="yes">Yes</string>
 

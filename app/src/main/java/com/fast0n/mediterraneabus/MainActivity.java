@@ -16,6 +16,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.graphics.drawable.DrawerArrowDrawable;
 import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.View;
@@ -27,6 +28,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -54,8 +57,7 @@ import es.dmoral.toasty.Toasty;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
-    private ListView listView;
-
+    ActionBarDrawerToggle toggle;
     AdView mAdView;
     Bundle extras;
     Button departure, arrival;
@@ -63,17 +65,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     CustomAdapterRecents adapter;
     DatabaseHelper mDatabaseHelper;
     DrawerLayout drawer;
-    FloatingActionButton fab;
+    FloatingActionButton floatingActionButton;
     ImageButton change;
+    NavigationView navigationView;
     SharedPreferences settings;
     SharedPreferences.Editor editor;
     Spinner spinner;
     String change_str;
     TextView recent;
     Toolbar toolbar;
-    NavigationView navigationView;
-
-    private final static String ACTION_1 = "action1";
+    final int[] select = { 1 };
+    private Animation fab_open, fab_close, rotate_forward, rotate_backward;
+    private Boolean isFabOpen = false;
+    private FloatingActionButton fab, fab1;
+    private ListView listView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,16 +95,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         change = findViewById(R.id.imageButton3);
         departure = findViewById(R.id.button);
         drawer = findViewById(R.id.drawer_layout);
-        fab = findViewById(R.id.floatingActionButton);
+        fab = findViewById(R.id.fab);
+        fab1 = findViewById(R.id.fab1);
+        fab_close = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fab_close);
+        fab_open = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fab_open);
+        floatingActionButton = findViewById(R.id.floatingActionButton);
         list = findViewById(R.id.cardView1);
         listView = findViewById(R.id.listrecent);
         recent = findViewById(R.id.textView);
+        rotate_backward = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_backward);
+        rotate_forward = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_forward);
         spinner = findViewById(R.id.spinner);
+
+
 
         // initial info extras and database
         extras = getIntent().getExtras();
         mDatabaseHelper = new DatabaseHelper(this);
-
 
         // check first boot and version app
         settings = getSharedPreferences("sharedPreferences", 0);
@@ -138,9 +150,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 .show();
 
                 }
-            } catch (Exception e) {
-
-            }
+            } catch (Exception ignored) {}
         }
 
         // banner
@@ -150,10 +160,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mAdView.loadAd(adRequest);
 
         // make a list
-        List<String> list_spinner = new ArrayList<String>();
+        List<String> list_spinner = new ArrayList<>();
         list_spinner.add(getString(R.string.school_hours));
         list_spinner.add(getString(R.string.not_school_hours));
-        ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item,
+        ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item,
                 list_spinner);
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(dataAdapter);
@@ -284,7 +294,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
-        fab.setOnClickListener(new View.OnClickListener() {
+        floatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
@@ -328,24 +338,47 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         });
 
+        fab1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final String name = settings.getString("item", null);
+
+                if (name != null) {
+                    new MaterialDialog.Builder(MainActivity.this).title(getString(R.string.sure))
+                            .positiveText(getString(R.string.yes)).negativeText(getString(R.string.no))
+                            .onPositive(new MaterialDialog.SingleButtonCallback() {
+                                @Override
+                                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                                    mDatabaseHelper.deleteName(name.split("\n")[0], name.split("\n")[1]);
+
+                                    toggle.setDrawerIndicatorEnabled(true);
+                                    toggle.setHomeAsUpIndicator(R.drawable.ic_arrow_back);
+                                    animateFAB();
+                                    fab.hide();
+                                    Objects.requireNonNull(getSupportActionBar()).setTitle(getString(R.string.search));
+
+                                    // set INVISIBLE list and recent
+                                    list.setVisibility(View.INVISIBLE);
+                                    recent.setVisibility(View.INVISIBLE);
+                                    // reload listView
+                                    populateListView();
+                                }
+                            })
+
+                            .show();
+
+                }
+            }
+        });
+
         drawer = findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open,
+        toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open,
                 R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
         navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-
-        try {
-            switch (Objects.requireNonNull(getIntent().getAction())) {
-            case ACTION_1:
-
-                break;
-            default:
-                break;
-            }
-        } catch (NullPointerException ignored) {}
 
     }
 
@@ -387,36 +420,80 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String name = (String) parent.getItemAtPosition(position);
-                departure.setText(name.split("\n")[0]);
-                arrival.setText(name.split("\n")[1]);
-                departure.setTextColor(Color.BLACK);
-                arrival.setTextColor(Color.BLACK);
+
+                if (select[0] == 1) {
+                    String name = (String) parent.getItemAtPosition(position);
+                    departure.setText(name.split("\n")[0]);
+                    arrival.setText(name.split("\n")[1]);
+                    departure.setTextColor(Color.BLACK);
+                    arrival.setTextColor(Color.BLACK);
+                    select[0] = 2;
+                }
             }
         });
 
         listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
-            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int position, long id) {
+            public boolean onItemLongClick(final AdapterView<?> adapterView, View view, final int position, long id) {
 
                 final String name = (String) adapterView.getItemAtPosition(position);
+                editor.putString("item", name);
+                editor.commit();
 
-                new MaterialDialog.Builder(MainActivity.this).title(getString(R.string.delete))
-                        .positiveText(getString(R.string.yes)).negativeText(getString(R.string.no))
-                        .onPositive(new MaterialDialog.SingleButtonCallback() {
-                            @Override
-                            public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                                mDatabaseHelper.deleteName(name.split("\n")[0], name.split("\n")[1]);
-                                populateListView();
+                fab.show();
+                animateFAB();
+
+                if (select[0] == 1) {
+                    adapterView.getChildAt(position).setBackgroundColor(Color.parseColor("#e0e0e0"));
+                    Objects.requireNonNull(getSupportActionBar()).setTitle(getString(R.string.delete));
+                    DrawerArrowDrawable homeDrawable;
+                    getSupportActionBar().setHomeButtonEnabled(true);
+                    getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+                    homeDrawable = new DrawerArrowDrawable(toolbar.getContext());
+                    toolbar.setNavigationIcon(homeDrawable);
+                    toggle.setDrawerIndicatorEnabled(false);
+                    toggle.setHomeAsUpIndicator(R.drawable.ic_arrow_back);
+
+                    toggle.setToolbarNavigationClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if (!drawer.isDrawerVisible(GravityCompat.START)) {
+                                adapterView.getChildAt(position).setBackgroundColor(Color.WHITE);
+                                toggle.setDrawerIndicatorEnabled(true);
+                                toggle.setHomeAsUpIndicator(R.drawable.ic_arrow_back);
+                                animateFAB();
+                                fab.hide();
+                                Objects.requireNonNull(getSupportActionBar()).setTitle(getString(R.string.search));
+                                select[0] = 1;
+
                             }
-                        })
-
-                        .show();
-
+                        }
+                    });
+                    select[0] = 2;
+                }
                 return false;
             }
         });
 
+    }
+
+    public void animateFAB() {
+
+        if (isFabOpen) {
+
+            fab.startAnimation(rotate_backward);
+            fab1.startAnimation(fab_close);
+            fab1.setClickable(false);
+            isFabOpen = false;
+
+        } else {
+
+            fab.startAnimation(rotate_forward);
+            fab1.startAnimation(fab_open);
+            fab1.setClickable(true);
+            isFabOpen = true;
+
+        }
     }
 
     public void directSearch(View view) {
@@ -471,6 +548,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
         return super.onOptionsItemSelected(item);
     }
 

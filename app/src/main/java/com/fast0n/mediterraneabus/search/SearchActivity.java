@@ -233,24 +233,24 @@ public class SearchActivity extends AppCompatActivity {
             if (gps.canGetLocation()) {
 
                 try {
-                    List<Address> listAddresses = geocoder.getFromLocation(gps.getLongitude(), gps.getLatitude(), 1);
+                    try {
+                        List<Address> listAddresses = geocoder.getFromLocation(gps.getLongitude(), gps.getLatitude(), 1);
 
-                    Address obj = listAddresses.get(0);
+                        Address obj = listAddresses.get(0);
+                        String add = obj.getLocality();
 
-                    String add = obj.getLocality();
+                        if (add != null && !add.isEmpty()) {
 
-                    if (add != null) {
+                            list2.setVisibility(View.VISIBLE);
+                            txtNearest.setVisibility(View.VISIBLE);
 
-                        list2.setVisibility(View.VISIBLE);
-                        txtNearest.setVisibility(View.VISIBLE);
-
-                        final ArrayList<String> listp = new ArrayList<>();
-                        listp.add(add);
-                        final ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                                android.R.layout.simple_list_item_1, listp);
-                        listView2.setAdapter(adapter);
-                    }
-
+                            final ArrayList<String> listp = new ArrayList<>();
+                            listp.add(add);
+                            final ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+                                    android.R.layout.simple_list_item_1, listp);
+                            listView2.setAdapter(adapter);
+                        }
+                    }catch (IllegalArgumentException ignored){}
                 } catch (IOException ignored) {}
                 gps.stopUsingGPS();
             }
@@ -291,7 +291,6 @@ public class SearchActivity extends AppCompatActivity {
                 }, new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Log.d("Error.Response", error.getMessage());
 
                     }
 
