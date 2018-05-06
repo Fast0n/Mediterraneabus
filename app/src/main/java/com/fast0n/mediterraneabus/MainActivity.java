@@ -107,8 +107,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         rotate_forward = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_forward);
         spinner = findViewById(R.id.spinner);
 
-
-
         // initial info extras and database
         extras = getIntent().getExtras();
         mDatabaseHelper = new DatabaseHelper(this);
@@ -150,7 +148,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 .show();
 
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
 
         // banner
@@ -163,8 +162,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         List<String> list_spinner = new ArrayList<>();
         list_spinner.add(getString(R.string.school_hours));
         list_spinner.add(getString(R.string.not_school_hours));
-        ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item,
-                list_spinner);
+        ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, list_spinner);
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(dataAdapter);
 
@@ -435,15 +433,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(final AdapterView<?> adapterView, View view, final int position, long id) {
-
-                final String name = (String) adapterView.getItemAtPosition(position);
-                editor.putString("item", name);
-                editor.commit();
-
-                fab.show();
-                animateFAB();
-
                 if (select[0] == 1) {
+
+                    final String name = (String) adapterView.getItemAtPosition(position);
+                    editor.putString("item", name);
+                    editor.commit();
+
+                    fab.show();
+                    animateFAB();
+
                     adapterView.getChildAt(position).setBackgroundColor(Color.parseColor("#e0e0e0"));
                     Objects.requireNonNull(getSupportActionBar()).setTitle(getString(R.string.delete));
                     DrawerArrowDrawable homeDrawable;
