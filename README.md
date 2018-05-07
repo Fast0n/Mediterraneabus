@@ -6,7 +6,8 @@ App android per la visualizzazione degli orari della Mediterraneabus
 [![Build Status][travis-image]][travis-url] [![GitHub release][version-image]][version-url]
 
 ## Download
-<br /><a href='https://play.google.com/store/apps/details?id=com.fast0n.mediterraneabus'><img alt='Disponibile su Google Play' src='https://play.google.com/intl/en_us/badges/images/generic/it_badge_web_generic.png' height='60' /></a>
+<br /><a href='https://play.google.com/store/apps/details?id=com.fast0n.mediterraneabus'><img alt='Disponibile su Google Play' src='https://play.google.com/intl/en_us/badges/images/generic/it_badge_web_generic.png' height='60' /></a><br />⚠️L'app è stata creata in modo non ufficiale MEDITERRANEABUS SPA. non è responsabile in alcun modo⚠️
+
 
 ## Licenza
 Con licenza GPLv3: http://www.gnu.org/licenses/gpl-3.0.html
