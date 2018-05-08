@@ -87,11 +87,30 @@
                 android:background="#f8f8f8"
                 android:orientation="vertical"
                 android:paddingTop="5dp">
-                <TextView android:id="@+id/duration"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingLeft="10dp"
-                    android:textColor="@android:color/black" />
+
+                <LinearLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:layout_marginTop="5dp"
+                    android:background="#f8f8f8"
+                    android:orientation="horizontal"
+                    android:paddingTop="5dp">
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:background="@android:color/transparent"
+                        android:src="@drawable/ic_time"
+                        android:paddingLeft="10dp"
+                        />
+
+                    <TextView android:id="@+id/duration"
+                        android:text="00:00"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="5dp"
+                        android:textColor="@android:color/black" />
+                </LinearLayout>
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

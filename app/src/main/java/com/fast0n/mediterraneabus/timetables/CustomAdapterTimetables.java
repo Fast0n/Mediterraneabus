@@ -68,7 +68,7 @@ public class CustomAdapterTimetables extends ArrayAdapter<DataTimetables>  {
         viewHolder.txtName_time.setText(dataTimetables.getName_time());
         viewHolder.txtTime1.setText(dataTimetables.getTime1());
         viewHolder.txtName_time1.setText(dataTimetables.getName_time1());
-        viewHolder.txtDuration.setText("⏱ " + dataTimetables.getDuration());
+        viewHolder.txtDuration.setText(dataTimetables.getDuration());
         return convertView;
     }
 }

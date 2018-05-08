@@ -525,6 +525,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
+            final String item = settings.getString("item", null);
+            if (item != null) {
+                animateFAB();
+                fab.hide();
+                Objects.requireNonNull(getSupportActionBar()).setTitle(getString(R.string.search));
+                select[0] = 1;
+                // set INVISIBLE list and recent
+                list.setVisibility(View.INVISIBLE);
+                recent.setVisibility(View.INVISIBLE);
+                // reload listView
+                populateListView();
+            }else{
             this.finish();
             Intent intent = new Intent(Intent.ACTION_MAIN);
             intent.addCategory(Intent.CATEGORY_HOME);
@@ -534,6 +546,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             int pid = android.os.Process.myPid();
             android.os.Process.killProcess(pid);
             super.onBackPressed();
+            }
         }
     }
 

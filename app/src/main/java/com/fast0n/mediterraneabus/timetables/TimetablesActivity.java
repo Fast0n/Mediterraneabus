@@ -331,8 +331,6 @@ public class TimetablesActivity extends AppCompatActivity {
 
             if (mInterstitialAd.isLoaded()) {
                 mInterstitialAd.show();
-            } else {
-                Log.e("TAG", "The interstitial wasn't loaded yet.");
             }
 
             sort = settings.getString("sort", null);
@@ -384,33 +382,7 @@ public class TimetablesActivity extends AppCompatActivity {
         switch (item.getItemId()) {
         case android.R.id.home:
 
-            final String share = settings.getString("share", null);
-
-            if (share != null) {
-
-                Objects.requireNonNull(getSupportActionBar()).setTitle(getString(R.string.solutions));
-                actionBar.setHomeAsUpIndicator(R.drawable.ic_arrow_back);
-                fab.hide();
-                animateFAB();
-
-                final String url = "https://mediterraneabus-api.herokuapp.com/?periodo=invernale&percorso_linea="
-                        + departure + "&percorso_linea1=" + arrival + "&sort_by=time";
-
-                get(url);
-
-                editor.putString("share", null);
-                editor.apply();
-
-            } else {
-                finish();
-                settings.edit().remove("sort").apply();
-
-                Intent mainActivity = new Intent(TimetablesActivity.this, MainActivity.class);
-                mainActivity.putExtra("departure", departure);
-                mainActivity.putExtra("arrival", arrival);
-                mainActivity.putExtra("period", period);
-                startActivity(mainActivity);
-            }
+            closeApplication();
             return true;
         default:
             return super.onOptionsItemSelected(item);
@@ -419,13 +391,37 @@ public class TimetablesActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        finish();
-        settings.edit().remove("sort").apply();
+        closeApplication();
+    }
 
-        Intent mainActivity = new Intent(TimetablesActivity.this, MainActivity.class);
-        mainActivity.putExtra("departure", departure);
-        mainActivity.putExtra("arrival", arrival);
-        mainActivity.putExtra("period", period);
-        startActivity(mainActivity);
+
+    public void closeApplication(){
+        final String share = settings.getString("share", null);
+        if (share != null) {
+
+            Objects.requireNonNull(getSupportActionBar()).setTitle(getString(R.string.solutions));
+            actionBar.setHomeAsUpIndicator(R.drawable.ic_arrow_back);
+            fab.hide();
+            animateFAB();
+
+            final String url = "https://mediterraneabus-api.herokuapp.com/?periodo=invernale&percorso_linea="
+                    + departure + "&percorso_linea1=" + arrival + "&sort_by=time";
+
+            get(url);
+
+            editor.putString("share", null);
+            select[0] = 1;
+            editor.apply();
+
+        } else {
+            finish();
+            settings.edit().remove("sort").apply();
+
+            Intent mainActivity = new Intent(TimetablesActivity.this, MainActivity.class);
+            mainActivity.putExtra("departure", departure);
+            mainActivity.putExtra("arrival", arrival);
+            mainActivity.putExtra("period", period);
+            startActivity(mainActivity);
+        }
     }
 }
