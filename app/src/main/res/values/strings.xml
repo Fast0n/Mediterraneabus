@@ -26,6 +26,9 @@
     <!-- SearchActivity -->
     <string name="choose_route">Choose route</string>
     <string name="nearest">Nearest</string>
+    <string name="warning">Warning</string>
+    <string name="warning_content">Please enabled GPS from settings</string>
+    <string name="cancel">Cancel</string>
 
     <!-- TimetableActivity -->
     <string name="solutions">Solutions</string>

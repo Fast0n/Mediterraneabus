@@ -186,8 +186,20 @@ public class SearchActivity extends AppCompatActivity {
 
                     if (s.toString().equals("")) {
                         list.setVisibility(View.INVISIBLE);
-                        list2.setVisibility(View.VISIBLE);
-                        txtNearest.setVisibility(View.VISIBLE);
+
+
+                        GPSTracker gps = new GPSTracker(SearchActivity.this);
+                        gps = new GPSTracker(SearchActivity.this);
+                        if (!gps.canGetLocation()) {
+                            list2.setVisibility(View.INVISIBLE);
+                            txtNearest.setVisibility(View.INVISIBLE);
+                        }
+                        else{
+                            show_gps();
+                            list2.setVisibility(View.VISIBLE);
+                            txtNearest.setVisibility(View.VISIBLE);
+                        }
+
                     }
 
                 }
@@ -230,30 +242,41 @@ public class SearchActivity extends AppCompatActivity {
                     new String[] { Manifest.permission.ACCESS_FINE_LOCATION }, 1);
         } else {
 
+            gps = new GPSTracker(SearchActivity.this);
+
+
             if (gps.canGetLocation()) {
 
+                double latitude = gps.getLatitude();
+                double longitude = gps.getLongitude();
+
+                geocoder = new Geocoder(SearchActivity.this, Locale.getDefault());
+                List<Address> addresses = null;
+
+
                 try {
-                    try {
-                        List<Address> listAddresses = geocoder.getFromLocation(gps.getLongitude(), gps.getLatitude(), 1);
+                    addresses = geocoder.getFromLocation(latitude, longitude, 1);
 
-                        Address obj = listAddresses.get(0);
-                        String add = obj.getLocality();
+                    if (addresses != null && !addresses.isEmpty()) {
+                        list2.setVisibility(View.VISIBLE);
+                        txtNearest.setVisibility(View.VISIBLE);
 
-                        if (add != null && !add.isEmpty()) {
+                        final ArrayList<String> listp = new ArrayList<>();
+                        listp.add(addresses.get(0).getLocality());
+                        final ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+                                android.R.layout.simple_list_item_1, listp);
+                        listView2.setAdapter(adapter);
 
-                            list2.setVisibility(View.VISIBLE);
-                            txtNearest.setVisibility(View.VISIBLE);
+                    }
 
-                            final ArrayList<String> listp = new ArrayList<>();
-                            listp.add(add);
-                            final ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                                    android.R.layout.simple_list_item_1, listp);
-                            listView2.setAdapter(adapter);
-                        }
-                    }catch (IllegalArgumentException ignored){}
                 } catch (IOException ignored) {}
-                gps.stopUsingGPS();
+
+            } else {
+
+                gps.showSettingsAlert();
             }
+
+
 
         }
 
