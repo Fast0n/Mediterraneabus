@@ -75,9 +75,11 @@ public class InfoActivity extends AppCompatActivity {
         dataInfos.add(
                 new DataInfo(getString(R.string.translate) + "<br><small>🤷🏼‍♂️</small>", R.drawable.ic_translate));
         dataInfos.add(new DataInfo(getString(R.string.source_code), R.drawable.ic_github));
+        dataInfos.add(new DataInfo(getString(R.string.support), R.drawable.ic_instagram));
         dataInfos.add(new DataInfo(getString(R.string.donate), R.drawable.ic_donate));
         dataInfos.add(new DataInfo(getString(R.string.author) + "<br><small>Massimiliano Montaleone (Fast0n)</small>",
                 R.drawable.ic_user));
+        dataInfos.add(new DataInfo(getString(R.string.content), R.drawable.ic_warning));
 
         // set data to Adapter
         adapter = new CustomAdapterInfo(dataInfos, getApplicationContext());
@@ -106,13 +108,19 @@ public class InfoActivity extends AppCompatActivity {
                     break;
 
                 case 4:
-                    Intent intent4 = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.paypal.me/Fast0n/0.5"));
+                    Intent intent4 = new Intent(Intent.ACTION_VIEW,
+                            Uri.parse("https://www.instagram.com/mediterraneabus"));
                     startActivity(intent4);
                     break;
 
                 case 5:
-                    Intent intent5 = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.instagram.com/fast0n/"));
+                    Intent intent5 = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.paypal.me/Fast0n/0.5"));
                     startActivity(intent5);
+                    break;
+
+                case 6:
+                    Intent intent6 = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.instagram.com/fast0n/"));
+                    startActivity(intent6);
                     break;
 
                 }
@@ -121,9 +129,6 @@ public class InfoActivity extends AppCompatActivity {
         });
 
     }
-
-
-
 
     public boolean isOnline() {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);

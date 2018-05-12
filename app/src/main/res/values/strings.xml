@@ -31,6 +31,7 @@
     <string name="cancel">Cancel</string>
 
     <!-- TimetableActivity -->
+    <string name="contact">Contact the developer</string>
     <string name="solutions">Solutions</string>
     <string name="sort">Sort order</string>
     <string name="timetable_not_found">Timetable not found</string>
@@ -41,6 +42,7 @@
     <string name="version">Version</string>
     <string name="translate">Translations</string>
     <string name="source_code">Source Code</string>
+    <string name="support">Support</string>
     <string name="donate">Donate</string>
     <string name="changelog">Changelog</string>
     <string name="author">Author</string>

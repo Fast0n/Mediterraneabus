@@ -2,17 +2,20 @@ package com.fast0n.mediterraneabus.timetables;
 
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.os.Build;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -60,6 +63,7 @@ public class TimetablesActivity extends AppCompatActivity {
     String departure, arrival, period;
     String sort;
     Toolbar toolbar;
+    Vibrator v;
     private Animation fab_open, fab_close, rotate_forward, rotate_backward;
     private Boolean isFabOpen = false;
     private CustomAdapterTimetables adapter;
@@ -100,6 +104,7 @@ public class TimetablesActivity extends AppCompatActivity {
         mAdView = findViewById(R.id.adView1);
         rotate_backward = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_backward);
         rotate_forward = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_forward);
+        v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
         settings = getSharedPreferences("sharedPreferences", 0);
         editor = settings.edit();
@@ -155,10 +160,9 @@ public class TimetablesActivity extends AppCompatActivity {
                         + departure + "&percorso_linea1=" + arrival + "&sort_by=time";
 
                 get(url);
-
+                select[0] = 1;
                 editor.putString("share", null);
                 editor.apply();
-
 
             }
         });
@@ -245,14 +249,27 @@ public class TimetablesActivity extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
 
-                        dataHours = new ArrayList<>();
-                        dataHours.add(new DataTimetables(getString(R.string.timetable_not_found), "00:00", "00:00",
-                                departure, arrival, "00:00"));
-                        adapter = new CustomAdapterTimetables(dataHours, getApplicationContext());
+                        int error_code = error.networkResponse.statusCode;
 
-                        listView.setAdapter(adapter);
+                        if (error_code == 503) {
+                            dataHours = new ArrayList<>();
+                            dataHours.add(new DataTimetables("Application error\n" + getString(R.string.contact),
+                                    "00:00", "00:00", departure, arrival, "00:00"));
+                            adapter = new CustomAdapterTimetables(dataHours, getApplicationContext());
 
-                        loading.setVisibility(View.INVISIBLE);
+                            listView.setAdapter(adapter);
+
+                            loading.setVisibility(View.INVISIBLE);
+                        } else {
+                            dataHours = new ArrayList<>();
+                            dataHours.add(new DataTimetables(getString(R.string.timetable_not_found), "00:00", "00:00",
+                                    departure, arrival, "00:00"));
+                            adapter = new CustomAdapterTimetables(dataHours, getApplicationContext());
+
+                            listView.setAdapter(adapter);
+
+                            loading.setVisibility(View.INVISIBLE);
+                        }
 
                     }
                 });
@@ -263,8 +280,10 @@ public class TimetablesActivity extends AppCompatActivity {
         listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int position, long id) {
-                if(select[0] == 1){
+                if (select[0] == 1) {
+                    select[0] = 2;
 
+                    vibrator();
                     adapterView.getChildAt(position).setBackgroundColor(Color.parseColor("#e0e0e0"));
 
                     Objects.requireNonNull(getSupportActionBar()).setTitle(getString(R.string.share));
@@ -277,7 +296,7 @@ public class TimetablesActivity extends AppCompatActivity {
                     TextView name_time1 = view.findViewById(R.id.name_time1);
 
                     String share = "🚏 " + getString(R.string.departure) + " "
-                            + name_time.getText().toString().toUpperCase() + "\n" + ride.getText().toString() + "\n🕜"
+                            + name_time.getText().toString().toUpperCase() + "\n" + ride.getText().toString() + "\n🕜 "
                             + getString(R.string.timetables) + " " + time.getText().toString() + " --> "
                             + time1.getText().toString() + "\n" + getString(R.string.arrival) + " "
                             + name_time1.getText().toString().toUpperCase();
@@ -287,7 +306,6 @@ public class TimetablesActivity extends AppCompatActivity {
 
                     fab.show();
                     animateFAB();
-                    select[0] = 2;
                 }
 
                 return false;
@@ -389,13 +407,23 @@ public class TimetablesActivity extends AppCompatActivity {
         }
     }
 
+    public void vibrator() {
+
+        // Vibrate for 50 milliseconds
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            v.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE));
+        } else {
+            // deprecated in API 26
+            v.vibrate(50);
+        }
+    }
+
     @Override
     public void onBackPressed() {
         closeApplication();
     }
 
-
-    public void closeApplication(){
+    public void closeApplication() {
         final String share = settings.getString("share", null);
         if (share != null) {
 

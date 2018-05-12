@@ -1,20 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
+<!-- drawable/currency_eur.xml -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-android:width="24.000000dp"
-android:height="24.000000dp"
-android:viewportWidth="1098.000000"
-android:viewportHeight="1128.000000">
-
-<path
-    android:fillColor="@color/colorPrimary"
-    android:strokeWidth="1"
-    android:pathData="M575,1119 C430,1090,283,972,225,837 L196,770 L123,770 L50,770 L50,710 L50,650
-L110,650 L170,650 L170,590 L170,530 L110,530 L50,530 L50,470 L50,410 L123,410
-L195,409 L232,331 C346,91,633,-15,881,91 L929,112 L899,171
-C883,203,867,230,865,230 C862,230,831,221,797,209 C676,168,538,194,440,277
-C408,303,350,385,350,402 C350,406,424,410,515,410 L680,410 L680,470 L680,530
-L500,530 L320,530 L320,590 L320,650 L500,650 L680,650 L680,710 L680,770 L515,772
-L351,775 L366,807 C435,949,627,1025,783,973 L840,953 L871,1006
-C888,1036,899,1064,895,1069 C892,1074,864,1088,832,1100
-C766,1125,649,1134,575,1119 Z" />
+    android:height="24dp"
+    android:width="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path android:fillColor="@color/colorPrimary" android:pathData="M7.07,11L7,12L7.07,13H17.35L16.5,15H7.67C8.8,17.36 11.21,19 14,19C16.23,19 18.22,17.96 19.5,16.33V19.12C18,20.3 16.07,21 14,21C10.08,21 6.75,18.5 5.5,15H2L3,13H5.05L5,12L5.05,11H2L3,9H5.5C6.75,5.5 10.08,3 14,3C16.5,3 18.8,4.04 20.43,5.71L19.57,7.75C18.29,6.08 16.27,5 14,5C11.21,5 8.8,6.64 7.67,9H19.04L18.19,11H7.07Z" />
 </vector>

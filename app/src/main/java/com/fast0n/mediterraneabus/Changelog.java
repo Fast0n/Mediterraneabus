@@ -43,19 +43,21 @@ public class Changelog {
                             String description = scorro_orari.getString("description");
 
                             if (Build.VERSION.SDK_INT >= 24) {
-                                MaterialDialog dialog = new MaterialDialog.Builder(context).title(context.getString(R.string.news))
-                                        .cancelable(cancellable).contentColor(Color.BLACK)
+                                MaterialDialog dialog = new MaterialDialog.Builder(context)
+                                        .title(context.getString(R.string.news)).cancelable(cancellable)
+                                        .contentColor(Color.BLACK)
                                         .content(Html.fromHtml(
-                                                "<strong>v" + version + "</strong><br />"
-                                                        + description.replace("*  ", "<br />\t•"),
+                                                "<strong>" + context.getString(R.string.version) + " " + version
+                                                        + "</strong><br />" + description.replace("*  ", "<br />\t•"),
                                                 Html.FROM_HTML_MODE_LEGACY))
                                         .positiveText(context.getString(R.string.close)).show();
 
                             } else {
-                                MaterialDialog dialog = new MaterialDialog.Builder(context).title(context.getString(R.string.news))
-                                        .cancelable(cancellable).contentColor(Color.BLACK)
-                                        .content(Html.fromHtml(
-                                                "<h4>v" + version + "</h4>" + description.replace("####", "<strong>").replace("*  ", "<br />\t•")))
+                                MaterialDialog dialog = new MaterialDialog.Builder(context)
+                                        .title(context.getString(R.string.news)).cancelable(cancellable)
+                                        .contentColor(Color.BLACK)
+                                        .content(Html.fromHtml("<h4>v" + version + "</h4>"
+                                                + description.replace("####", "<strong>").replace("*  ", "<br />\t•")))
                                         .positiveText(context.getString(R.string.close)).show();
                             }
 
@@ -64,13 +66,13 @@ public class Changelog {
 
                     }
                 }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Toasty.error(context, context.getString(R.string.errorchangelog), Toast.LENGTH_SHORT, true).show();
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toasty.error(context, context.getString(R.string.errorchangelog), Toast.LENGTH_SHORT, true)
+                                .show();
 
-
-            }
-        });
+                    }
+                });
 
         queue.add(getRequest);
     }

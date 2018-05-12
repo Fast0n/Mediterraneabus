@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -18,7 +19,6 @@ import android.support.v7.widget.CardView;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -30,19 +30,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
 import com.fast0n.mediterraneabus.GPSTracker;
 import com.fast0n.mediterraneabus.MainActivity;
 import com.fast0n.mediterraneabus.R;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -187,14 +177,12 @@ public class SearchActivity extends AppCompatActivity {
                     if (s.toString().equals("")) {
                         list.setVisibility(View.INVISIBLE);
 
-
                         GPSTracker gps = new GPSTracker(SearchActivity.this);
                         gps = new GPSTracker(SearchActivity.this);
                         if (!gps.canGetLocation()) {
                             list2.setVisibility(View.INVISIBLE);
                             txtNearest.setVisibility(View.INVISIBLE);
-                        }
-                        else{
+                        } else {
                             show_gps();
                             list2.setVisibility(View.VISIBLE);
                             txtNearest.setVisibility(View.VISIBLE);
@@ -225,8 +213,7 @@ public class SearchActivity extends AppCompatActivity {
                     startActivity(i);
                 }
             });
-        }
-        else {
+        } else {
             Toasty.error(SearchActivity.this, getString(R.string.errorconnection), Toast.LENGTH_LONG, true).show();
         }
     }
@@ -244,7 +231,6 @@ public class SearchActivity extends AppCompatActivity {
 
             gps = new GPSTracker(SearchActivity.this);
 
-
             if (gps.canGetLocation()) {
 
                 double latitude = gps.getLatitude();
@@ -252,7 +238,6 @@ public class SearchActivity extends AppCompatActivity {
 
                 geocoder = new Geocoder(SearchActivity.this, Locale.getDefault());
                 List<Address> addresses = null;
-
 
                 try {
                     addresses = geocoder.getFromLocation(latitude, longitude, 1);
@@ -269,57 +254,25 @@ public class SearchActivity extends AppCompatActivity {
 
                     }
 
-                } catch (IOException ignored) {}
+                } catch (IOException ignored) {
+                }
 
             } else {
 
                 gps.showSettingsAlert();
             }
 
-
-
         }
 
     }
 
     public void listRoutes() {
-        String url = "https://mediterraneabus-api.herokuapp.com/?lista";
-        RequestQueue queue = Volley.newRequestQueue(this);
-        JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.GET, url, null,
-                new Response.Listener<JSONObject>() {
 
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        try {
-
-                            JSONObject json_raw = new JSONObject(response.toString());
-                            String linee = json_raw.getString("list");
-                            JSONArray lineeArr = new JSONArray(linee);
-
-                            JSONObject scorro_orari = new JSONObject(lineeArr.getString(0));
-
-                            String description = scorro_orari.getString("routes");
-                            JSONArray lineeArr2 = new JSONArray(description);
-                            for (int i = 0; i < lineeArr2.length(); i++) {
-                                String corse = lineeArr2.getString(i);
-
-                                data.add(corse);
-                            }
-
-                        } catch (JSONException ignored) {
-                        }
-
-                    }
-
-                }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-
-                    }
-
-                });
-        queue.add(getRequest);
-
+        SharedPreferences mSharedPreference1 = getSharedPreferences("listRoutes", 0);
+        int size = mSharedPreference1.getAll().size();
+        for (int i = 0; i < size; i++) {
+            data.add(mSharedPreference1.getString(Integer.toString(i), null));
+        }
     }
 
     public boolean isOnline() {

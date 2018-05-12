@@ -11,7 +11,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
@@ -41,6 +44,12 @@ import android.widget.Toast;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.fast0n.mediterraneabus.search.SearchActivity;
 import com.fast0n.mediterraneabus.timetables.TimetablesActivity;
 import com.fast0n.mediterraneabus.info.InfoActivity;
@@ -48,6 +57,10 @@ import com.fast0n.mediterraneabus.recents.CustomAdapterRecents;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,12 +81,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     FloatingActionButton floatingActionButton;
     ImageButton change;
     NavigationView navigationView;
-    SharedPreferences settings;
+    SharedPreferences settings, lista;
     SharedPreferences.Editor editor;
     Spinner spinner;
     String change_str;
     TextView recent;
     Toolbar toolbar;
+    Vibrator v;
     final int[] select = { 1 };
     private Animation fab_open, fab_close, rotate_forward, rotate_backward;
     private Boolean isFabOpen = false;
@@ -106,6 +120,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         rotate_backward = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_backward);
         rotate_forward = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_forward);
         spinner = findViewById(R.id.spinner);
+        v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
         // initial info extras and database
         extras = getIntent().getExtras();
@@ -140,6 +155,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 if (Integer.parseInt(version) != Integer.parseInt(BuildConfig.VERSION_NAME)) {
 
                     if (isOnline()) {
+                        listRoutes();
                         editor.putString("version", BuildConfig.VERSION_NAME);
                         editor.commit();
                         new Changelog(MainActivity.this, false);
@@ -360,6 +376,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     recent.setVisibility(View.INVISIBLE);
                                     // reload listView
                                     populateListView();
+
+                                    // update item
+                                    editor.putString("item", null);
+                                    editor.commit();
+
+                                    select[0] = 1;
+
                                 }
                             })
 
@@ -435,6 +458,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public boolean onItemLongClick(final AdapterView<?> adapterView, View view, final int position, long id) {
                 if (select[0] == 1) {
 
+                    vibrator();
                     final String name = (String) adapterView.getItemAtPosition(position);
                     editor.putString("item", name);
                     editor.commit();
@@ -462,16 +486,62 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 animateFAB();
                                 fab.hide();
                                 Objects.requireNonNull(getSupportActionBar()).setTitle(getString(R.string.search));
+                                editor.putString("item", null);
                                 select[0] = 1;
+                                editor.apply();
 
                             }
                         }
                     });
-                    select[0] = 2;
+                    select[0] = 1;
+
                 }
                 return false;
             }
         });
+
+    }
+
+    public void listRoutes() {
+        String url = "https://mediterraneabus-api.herokuapp.com/?lista";
+        RequestQueue queue = Volley.newRequestQueue(this);
+        JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONObject>() {
+
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+
+                            JSONObject json_raw = new JSONObject(response.toString());
+                            String linee = json_raw.getString("list");
+                            JSONArray lineeArr = new JSONArray(linee);
+
+                            JSONObject scorro_orari = new JSONObject(lineeArr.getString(0));
+
+                            String description = scorro_orari.getString("routes");
+                            JSONArray lineeArr2 = new JSONArray(description);
+                            for (int i = 0; i < lineeArr2.length(); i++) {
+                                String corse = lineeArr2.getString(i);
+
+                                lista = getSharedPreferences("listRoutes", 0);
+                                editor = lista.edit();
+                                editor.putString(Integer.toString(i), corse);
+                                editor.apply();
+                            }
+
+                        } catch (JSONException ignored) {
+                        }
+
+                    }
+
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                    }
+
+                });
+        queue.add(getRequest);
 
     }
 
@@ -520,13 +590,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
+    public void vibrator() {
+
+        // Vibrate for 50 milliseconds
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            v.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE));
+        } else {
+            // deprecated in API 26
+            v.vibrate(50);
+        }
+    }
+
     @Override
     public void onBackPressed() {
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
             final String item = settings.getString("item", null);
-            if (item != null) {
+
+            if (select[0] == 2 && item != null) {
                 animateFAB();
                 fab.hide();
                 Objects.requireNonNull(getSupportActionBar()).setTitle(getString(R.string.search));
@@ -536,16 +618,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 recent.setVisibility(View.INVISIBLE);
                 // reload listView
                 populateListView();
-            }else{
-            this.finish();
-            Intent intent = new Intent(Intent.ACTION_MAIN);
-            intent.addCategory(Intent.CATEGORY_HOME);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
 
-            int pid = android.os.Process.myPid();
-            android.os.Process.killProcess(pid);
-            super.onBackPressed();
+            } else {
+                this.finish();
+                Intent intent = new Intent(Intent.ACTION_MAIN);
+                intent.addCategory(Intent.CATEGORY_HOME);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+
+                int pid = android.os.Process.myPid();
+                android.os.Process.killProcess(pid);
+                super.onBackPressed();
             }
         }
     }
