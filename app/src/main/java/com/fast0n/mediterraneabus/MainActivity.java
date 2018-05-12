@@ -2,6 +2,7 @@ package com.fast0n.mediterraneabus;
 
 import android.Manifest;
 import android.app.ActivityManager;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -10,6 +11,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -31,13 +33,17 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.webkit.URLUtil;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -93,6 +99,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private Boolean isFabOpen = false;
     private FloatingActionButton fab, fab1;
     private ListView listView;
+    ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -129,7 +136,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // check first boot and version app
         settings = getSharedPreferences("sharedPreferences", 0);
         String start = settings.getString("start", null);
-        String version = settings.getString("version", null);
+        final String version = settings.getString("version", null);
+        final String version_code = settings.getString("version_code", null);
         editor = settings.edit();
 
         if (start == null) {
@@ -139,32 +147,47 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             new MaterialDialog.Builder(this).onPositive(new MaterialDialog.SingleButtonCallback() {
                 @Override
                 public void onClick(MaterialDialog dialog, DialogAction which) {
-                    new Changelog(MainActivity.this, false);
+                    ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
+                    progressDialog.setMessage(getString(R.string.changelog_loading));
+                    listRoutes();
+                    progressDialog.show();
+                    if (version == null) {
+
+                        editor.putString("version", BuildConfig.VERSION_NAME);
+                        editor.putString("version_code", String.valueOf(BuildConfig.VERSION_CODE));
+                        editor.apply();
+                        progressDialog.hide();
+                        new Changelog(MainActivity.this, false);
+                    }
                 }
             }).cancelable(false).title(getString(R.string.title)).content(getString(R.string.content))
                     .positiveText(getString(R.string.positiveTextButton)).icon(getDrawable(R.drawable.ic_warning))
                     .show();
 
-        } else {
-            if (version == null) {
-                editor.putString("version", BuildConfig.VERSION_NAME);
-                editor.commit();
-            }
+        }
+
+        else {
 
             try {
-                if (Integer.parseInt(version) != Integer.parseInt(BuildConfig.VERSION_NAME)) {
-
-                    if (isOnline()) {
-                        listRoutes();
-                        editor.putString("version", BuildConfig.VERSION_NAME);
-                        editor.commit();
-                        new Changelog(MainActivity.this, false);
-                    } else
-                        Toasty.error(MainActivity.this, getString(R.string.errorconnection), Toast.LENGTH_LONG, true)
-                                .show();
-
+                if (Integer.parseInt(version_code) != Integer.parseInt(String.valueOf(BuildConfig.VERSION_CODE))) {
+                    editor.putString("version_code", String.valueOf(BuildConfig.VERSION_CODE));
+                    editor.apply();
+                    listRoutes();
                 }
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                editor.putString("version_code", String.valueOf(BuildConfig.VERSION_CODE));
+                editor.apply();
+                listRoutes();
+            }
+
+            if (Float.parseFloat(version) != Float.parseFloat(BuildConfig.VERSION_NAME)) {
+                ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
+                progressDialog.setMessage(getString(R.string.changelog_loading));
+                progressDialog.show();
+                editor.putString("version", BuildConfig.VERSION_NAME);
+                editor.apply();
+                progressDialog.hide();
+                new Changelog(MainActivity.this, false);
             }
         }
 
@@ -503,6 +526,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public void listRoutes() {
+
         String url = "https://mediterraneabus-api.herokuapp.com/?lista";
         RequestQueue queue = Volley.newRequestQueue(this);
         JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.GET, url, null,

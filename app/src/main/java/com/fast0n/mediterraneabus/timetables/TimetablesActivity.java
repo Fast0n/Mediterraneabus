@@ -16,11 +16,13 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.webkit.URLUtil;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -45,6 +47,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -174,6 +181,17 @@ public class TimetablesActivity extends AppCompatActivity {
         url = url.replaceAll(" ", "%20");
         RequestQueue queue = Volley.newRequestQueue(this);
 
+        try {
+
+            URL url43 = new URL(url);
+            HttpURLConnection http = (HttpURLConnection) url43.openConnection();
+            int statusCode = http.getResponseCode();
+
+            Log.e("error", String.valueOf(statusCode));
+
+        } catch (Exception ignored) {
+        }
+
         JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.GET, url, null,
                 new Response.Listener<JSONObject>() {
 
@@ -248,19 +266,13 @@ public class TimetablesActivity extends AppCompatActivity {
                 }, new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-
                         int error_code = error.networkResponse.statusCode;
 
                         if (error_code == 503) {
-                            dataHours = new ArrayList<>();
-                            dataHours.add(new DataTimetables("Application error\n" + getString(R.string.contact),
-                                    "00:00", "00:00", departure, arrival, "00:00"));
-                            adapter = new CustomAdapterTimetables(dataHours, getApplicationContext());
-
-                            listView.setAdapter(adapter);
-
-                            loading.setVisibility(View.INVISIBLE);
-                        } else {
+                            String url2 = "https://mediterraneabus-api.glitch.me/?periodo=invernale&percorso_linea="
+                                    + departure + "&percorso_linea1=" + arrival + "&sort_by=time";
+                            get(url2);
+                        } else if (error_code == 404) {
                             dataHours = new ArrayList<>();
                             dataHours.add(new DataTimetables(getString(R.string.timetable_not_found), "00:00", "00:00",
                                     departure, arrival, "00:00"));

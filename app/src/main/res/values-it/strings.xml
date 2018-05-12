@@ -52,6 +52,7 @@
     <string name="yes">Si</string>
 
     <!-- changelog -->
+    <string name="changelog_loading">Caricamento changelog in corso…</string>
     <string name="news">Novità</string>
     <string name="errorchangelog">Errore caricamento changelog</string>
     <string name="close">Chiudi</string>

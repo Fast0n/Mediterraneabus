@@ -54,6 +54,7 @@
     <string name="yes">Yes</string>
 
     <!-- changelog -->
+    <string name="changelog_loading">Loading changelog in progress…</string>
     <string name="news">News</string>
     <string name="errorchangelog">Error loading changelog</string>
     <string name="close">Close</string>
@@ -65,5 +66,4 @@
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-
 </resources>

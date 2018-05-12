@@ -19,6 +19,7 @@ import android.support.v7.widget.CardView;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -243,14 +244,25 @@ public class SearchActivity extends AppCompatActivity {
                     addresses = geocoder.getFromLocation(latitude, longitude, 1);
 
                     if (addresses != null && !addresses.isEmpty()) {
-                        list2.setVisibility(View.VISIBLE);
-                        txtNearest.setVisibility(View.VISIBLE);
 
-                        final ArrayList<String> listp = new ArrayList<>();
-                        listp.add(addresses.get(0).getLocality());
-                        final ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                                android.R.layout.simple_list_item_1, listp);
-                        listView2.setAdapter(adapter);
+                        SharedPreferences mSharedPreference1 = getSharedPreferences("listRoutes", 0);
+                        int size = mSharedPreference1.getAll().size();
+
+                        String location = addresses.get(0).getLocality();
+                        for (int i = 0; i < size; i++) {
+
+                            String elemento_lista = mSharedPreference1.getString(Integer.toString(i), null);
+                            if (elemento_lista.contains(location)) {
+                                list2.setVisibility(View.VISIBLE);
+                                txtNearest.setVisibility(View.VISIBLE);
+                                final ArrayList<String> listp = new ArrayList<>();
+                                listp.add(addresses.get(0).getLocality());
+                                final ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+                                        android.R.layout.simple_list_item_1, listp);
+                                listView2.setAdapter(adapter);
+                            }
+
+                        }
 
                     }
 
