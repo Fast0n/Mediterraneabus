@@ -258,10 +258,7 @@ public class TimetablesActivity extends AppCompatActivity {
 
                             loading.setVisibility(View.INVISIBLE);
 
-                        } catch (JSONException | ParseException e) {
-                            e.printStackTrace();
-                        }
-
+                        } catch (JSONException | ParseException ignored) {}
                     }
                 }, new Response.ErrorListener() {
                     @Override

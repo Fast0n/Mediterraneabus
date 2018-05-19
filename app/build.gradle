@@ -2,12 +2,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 'android-P'
+    compileSdkVersion 27
     defaultConfig {
         applicationId "com.fast0n.mediterraneabus"
         minSdkVersion 21
         targetSdkVersion 27
-        versionCode 9
+        versionCode 11
         versionName '0.3'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }

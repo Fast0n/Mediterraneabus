@@ -149,7 +149,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 public void onClick(MaterialDialog dialog, DialogAction which) {
                     ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
                     progressDialog.setMessage(getString(R.string.changelog_loading));
-                    listRoutes();
+                    listRoutes("https://mediterraneabus-api.herokuapp.com/?lista");
                     progressDialog.show();
                     if (version == null) {
 
@@ -172,12 +172,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 if (Integer.parseInt(version_code) != Integer.parseInt(String.valueOf(BuildConfig.VERSION_CODE))) {
                     editor.putString("version_code", String.valueOf(BuildConfig.VERSION_CODE));
                     editor.apply();
-                    listRoutes();
+                    listRoutes("https://mediterraneabus-api.herokuapp.com/?lista");
                 }
             } catch (Exception e) {
                 editor.putString("version_code", String.valueOf(BuildConfig.VERSION_CODE));
                 editor.apply();
-                listRoutes();
+                listRoutes("https://mediterraneabus-api.herokuapp.com/?lista");
             }
 
             if (Float.parseFloat(version) != Float.parseFloat(BuildConfig.VERSION_NAME)) {
@@ -525,9 +525,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    public void listRoutes() {
+    public void listRoutes(String url) {
 
-        String url = "https://mediterraneabus-api.herokuapp.com/?lista";
+
         RequestQueue queue = Volley.newRequestQueue(this);
         JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.GET, url, null,
                 new Response.Listener<JSONObject>() {
@@ -553,15 +553,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 editor.apply();
                             }
 
-                        } catch (JSONException ignored) {
-                        }
-
+                        } catch (JSONException ignored) {}
                     }
 
                 }, new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
+                        int error_code = error.networkResponse.statusCode;
 
+                        if (error_code == 503) {
+                            listRoutes("https://mediterraneabus-api.glitch.me/?lista");
+                        }
                     }
 
                 });
