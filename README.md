@@ -13,9 +13,9 @@ App android per la visualizzazione degli orari della Mediterraneabus
 Con licenza GPLv3: http://www.gnu.org/licenses/gpl-3.0.html
 
 ## Screenshots
-<a><img src='https://s26.postimg.cc/sme8i77eh/info.png' height='400' alt='icon'/></a>
-<a><img src='https://s26.postimg.cc/5kxncg015/search.png' height='400' alt='icon'/></a>
-<a><img src='https://s26.postimg.cc/icbtiyp8p/timetable.png' height='400' alt='icon'/></a>
+<a><img src='https://i.postimg.cc/zvhGGkK4/info.png' height='400' alt='icon'/></a>
+<a><img src='https://i.postimg.cc/50TtJrYw/search.png' height='400' alt='icon'/></a>
+<a><img src='https://i.postimg.cc/1RVtBy2M/timetable.png' height='400' alt='icon'/></a>
 
 
 
