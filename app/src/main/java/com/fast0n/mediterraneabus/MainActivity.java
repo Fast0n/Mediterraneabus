@@ -1,68 +1,48 @@
 package com.fast0n.mediterraneabus;
 
-import android.Manifest;
 import android.app.ActivityManager;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.PorterDuff;
 import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
-import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.graphics.drawable.DrawerArrowDrawable;
-import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.View;
-import android.support.design.widget.NavigationView;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.webkit.URLUtil;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.Spinner;
-import android.widget.TextView;
-import android.widget.Toast;
 
-import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.fast0n.mediterraneabus.info.InfoActivity;
+import com.fast0n.mediterraneabus.java.SnackbarMaterial;
+import com.fast0n.mediterraneabus.recents.CustomAdapterRecents;
 import com.fast0n.mediterraneabus.search.SearchActivity;
 import com.fast0n.mediterraneabus.timetables.TimetablesActivity;
-import com.fast0n.mediterraneabus.info.InfoActivity;
-import com.fast0n.mediterraneabus.recents.CustomAdapterRecents;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
+import com.google.android.material.snackbar.Snackbar;
+import com.skydoves.powermenu.MenuAnimation;
+import com.skydoves.powermenu.OnMenuItemClickListener;
+import com.skydoves.powermenu.PowerMenu;
+import com.skydoves.powermenu.PowerMenuItem;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -72,34 +52,68 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import es.dmoral.toasty.Toasty;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.PopupMenu;
+import androidx.appcompat.widget.Toolbar;
+import androidx.cardview.widget.CardView;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity {
 
-    ActionBarDrawerToggle toggle;
+    final int[] select = {1};
+    PowerMenu powerMenu;
     AdView mAdView;
+    ActionBarDrawerToggle toggle;
     Bundle extras;
-    Button departure, arrival;
+    Button departure, arrival, button_search, button, more;
     CardView list;
     CustomAdapterRecents adapter;
     DatabaseHelper mDatabaseHelper;
-    DrawerLayout drawer;
-    FloatingActionButton floatingActionButton;
     ImageButton change;
-    NavigationView navigationView;
     SharedPreferences settings, lista;
     SharedPreferences.Editor editor;
     Spinner spinner;
-    String change_str;
-    TextView recent;
+    String change_str, name;
     Toolbar toolbar;
     Vibrator v;
-    final int[] select = { 1 };
-    private Animation fab_open, fab_close, rotate_forward, rotate_backward;
-    private Boolean isFabOpen = false;
-    private FloatingActionButton fab, fab1;
-    private ListView listView;
     ProgressBar progressBar;
+    CoordinatorLayout coordinatorLayout;
+    private ListView listView;
+    private OnMenuItemClickListener<PowerMenuItem> onMenuItemClickListener = new OnMenuItemClickListener<PowerMenuItem>() {
+        @Override
+        public void onItemClick(int position, PowerMenuItem item) {
+
+            powerMenu.setSelectedPosition(position);
+
+            Log.e("prova", name);
+            vibrator();
+
+
+            new MaterialDialog.Builder(MainActivity.this).title(getString(R.string.sure))
+                    .positiveText(getString(R.string.yes)).negativeText(getString(R.string.no))
+                    .onPositive((dialog, which) -> {
+                        mDatabaseHelper.deleteName(name.split("::")[1].split("\n")[0], name.split("::")[1].split("\n")[1]);
+
+                        // set INVISIBLE list and recent
+                        list.setVisibility(View.INVISIBLE);
+                        // reload listView
+                        populateListView();
+
+                        // update item
+                        editor.putString("item", null);
+                        editor.commit();
+
+                        select[0] = 1;
+                    })
+
+                    .show();
+
+
+            powerMenu.dismiss();
+
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,26 +122,57 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        // change name of toolbar
-        Objects.requireNonNull(getSupportActionBar()).setTitle(getString(R.string.search));
-
         // java addresses
+        mAdView = findViewById(R.id.adView);
         arrival = findViewById(R.id.button2);
         change = findViewById(R.id.imageButton3);
+        coordinatorLayout = findViewById(R.id.cordinatorLayout);
         departure = findViewById(R.id.button);
-        drawer = findViewById(R.id.drawer_layout);
-        fab = findViewById(R.id.fab);
-        fab1 = findViewById(R.id.fab1);
-        fab_close = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fab_close);
-        fab_open = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fab_open);
-        floatingActionButton = findViewById(R.id.floatingActionButton);
+        button_search = findViewById(R.id.button_search);
         list = findViewById(R.id.cardView1);
         listView = findViewById(R.id.listrecent);
-        recent = findViewById(R.id.textView);
-        rotate_backward = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_backward);
-        rotate_forward = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_forward);
         spinner = findViewById(R.id.spinner);
         v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+
+        button = toolbar.findViewById(R.id.info);
+        more = toolbar.findViewById(R.id.more);
+
+
+        button.setOnClickListener(view -> {
+            //
+            startActivity(new Intent(getApplicationContext(), InfoActivity.class));
+
+        });
+
+
+        more.setOnClickListener(view -> {
+            //Creating the instance of PopupMenu
+            PopupMenu popup = new PopupMenu(MainActivity.this, button);
+            //Inflating the Popup using xml file
+            popup.getMenuInflater().inflate(R.menu.menu, popup.getMenu());
+
+            //registering popup with OnMenuItemClickListener
+            popup.setOnMenuItemClickListener(item -> {
+
+                switch (item.getItemId()) {
+                    case R.id.settings:
+                        Snackbar snack = Snackbar.make(coordinatorLayout,
+                                getString(R.string.settings_alert), Snackbar.LENGTH_SHORT).setAnchorView(R.id.layout);
+                        SnackbarMaterial.configSnackbar(getApplicationContext(), snack);
+                        snack.show();
+                        break;
+                }
+                return true;
+            });
+
+            popup.show();
+        });
+
+        // banner
+        MobileAds.initialize(this, "ca-app-pub-9646303341923759~6818726547");
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
+
 
         // initial info extras and database
         extras = getIntent().getExtras();
@@ -144,40 +189,35 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             editor.putString("start", "1");
             editor.apply();
 
-            new MaterialDialog.Builder(this).onPositive(new MaterialDialog.SingleButtonCallback() {
-                @Override
-                public void onClick(MaterialDialog dialog, DialogAction which) {
-                    ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
-                    progressDialog.setMessage(getString(R.string.changelog_loading));
-                    listRoutes("https://mediterraneabus-api.herokuapp.com/?lista");
-                    progressDialog.show();
-                    if (version == null) {
+            new MaterialDialog.Builder(this).onPositive((dialog, which) -> {
+                ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
+                progressDialog.setMessage(getString(R.string.changelog_loading));
+                listRoutes(getString(R.string.server) + "?lista");
+                progressDialog.show();
+                if (version == null) {
 
-                        editor.putString("version", BuildConfig.VERSION_NAME);
-                        editor.putString("version_code", String.valueOf(BuildConfig.VERSION_CODE));
-                        editor.apply();
-                        progressDialog.hide();
-                        new Changelog(MainActivity.this, false);
-                    }
+                    editor.putString("version", BuildConfig.VERSION_NAME);
+                    editor.putString("version_code", String.valueOf(BuildConfig.VERSION_CODE));
+                    editor.apply();
+                    progressDialog.hide();
+                    new Changelog(MainActivity.this, false, coordinatorLayout);
                 }
             }).cancelable(false).title(getString(R.string.title)).content(getString(R.string.content))
                     .positiveText(getString(R.string.positiveTextButton)).icon(getDrawable(R.drawable.ic_warning))
                     .show();
 
-        }
-
-        else {
+        } else {
 
             try {
                 if (Integer.parseInt(version_code) != Integer.parseInt(String.valueOf(BuildConfig.VERSION_CODE))) {
                     editor.putString("version_code", String.valueOf(BuildConfig.VERSION_CODE));
                     editor.apply();
-                    listRoutes("https://mediterraneabus-api.herokuapp.com/?lista");
+                    listRoutes(getString(R.string.server) + "?lista");
                 }
             } catch (Exception e) {
                 editor.putString("version_code", String.valueOf(BuildConfig.VERSION_CODE));
                 editor.apply();
-                listRoutes("https://mediterraneabus-api.herokuapp.com/?lista");
+                listRoutes(getString(R.string.server) + "?lista");
             }
 
             if (Float.parseFloat(version) != Float.parseFloat(BuildConfig.VERSION_NAME)) {
@@ -187,27 +227,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 editor.putString("version", BuildConfig.VERSION_NAME);
                 editor.apply();
                 progressDialog.hide();
-                new Changelog(MainActivity.this, false);
+                new Changelog(MainActivity.this, false, coordinatorLayout);
             }
         }
-
-        // banner
-        MobileAds.initialize(this, "ca-app-pub-9646303341923759~6818726547");
-        mAdView = findViewById(R.id.adView);
-        AdRequest adRequest = new AdRequest.Builder().build();
-        mAdView.loadAd(adRequest);
 
         // make a list
         List<String> list_spinner = new ArrayList<>();
         list_spinner.add(getString(R.string.school_hours));
         list_spinner.add(getString(R.string.not_school_hours));
-        ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, list_spinner);
+        ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(this, R.layout.spinner_item_text, list_spinner);
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(dataAdapter);
 
         // set INVISIBLE list and recent
         list.setVisibility(View.INVISIBLE);
-        recent.setVisibility(View.INVISIBLE);
         // reload listView
         populateListView();
 
@@ -239,9 +272,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     arrival.setTextColor(Color.BLACK);
                 }
 
-            }
-
-            else if (extras.getString("arrival") != null && extras.getString("getTextDeparture") != null) {
+            } else if (extras.getString("arrival") != null && extras.getString("getTextDeparture") != null) {
                 arrival.setText(extras.getString("arrival"));
                 arrival.setTextColor(Color.BLACK);
 
@@ -256,180 +287,119 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Log.e(getString(R.string.app_name), e.toString());
         }
 
-        change.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (!departure.getText().equals(getString(R.string.departure))
-                        && !arrival.getText().equals(getString(R.string.arrival))) {
-                    change_str = departure.getText().toString();
-                    departure.setText(arrival.getText());
-                    arrival.setText(change_str);
-                }
+        change.setOnClickListener(v -> {
+            if (!departure.getText().equals(getString(R.string.departure))
+                    && !arrival.getText().equals(getString(R.string.arrival))) {
+                change_str = departure.getText().toString();
+                departure.setText(arrival.getText());
+                arrival.setText(change_str);
             }
         });
 
-        departure.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        departure.setOnClickListener(v -> {
+            if (isOnline()) {
+                listRoutes(getString(R.string.server) + "?lista");
+                // passing strings between activity
+                Intent start1 = new Intent(MainActivity.this, SearchActivity.class);
+
+                if (!departure.getText().equals(getString(R.string.departure)))
+                    start1.putExtra("departure_text", departure.getText());
+
+                start1.putExtra("type", "departure");
+
+                start1.putExtra("activity", "departure");
+                start1.putExtra("getTextArrival", arrival.getText());
+                startActivity(start1);
+
+            } else {
+                Snackbar snack = Snackbar.make(coordinatorLayout,
+                        getString(R.string.errorconnection), Snackbar.LENGTH_SHORT).setAnchorView(R.id.layout);
+                SnackbarMaterial.configSnackbar(this, snack);
+                snack.show();
+            }
+        });
+
+        arrival.setOnClickListener(v -> {
+
+            if (isOnline()) {
+                listRoutes(getString(R.string.server) + "?lista");
+
+                // passaggio di stringhe tra activity
+                Intent start12 = new Intent(MainActivity.this, SearchActivity.class);
+
+                if (!arrival.getText().equals(getString(R.string.arrival)))
+                    start12.putExtra("arrival_text", arrival.getText());
+
+                start12.putExtra("type", "arrival");
+                start12.putExtra("activity", "arrival");
+                start12.putExtra("getTextDeparture", departure.getText());
+                startActivity(start12);
+
+
+            } else {
+                Snackbar snack = Snackbar.make(coordinatorLayout,
+                        getString(R.string.errorconnection), Snackbar.LENGTH_SHORT).setAnchorView(R.id.layout);
+                SnackbarMaterial.configSnackbar(this, snack);
+                snack.show();
+
+            }
+        });
+
+        button_search.setOnClickListener(view -> {
+            if (!departure.getText().equals(getString(R.string.departure))
+                    && !arrival.getText().equals(getString(R.string.arrival))) {
 
                 if (isOnline()) {
 
-                    // passing strings between activity
-                    Intent start = new Intent(MainActivity.this, SearchActivity.class);
+                    Animation fadeInAnimation = AnimationUtils.loadAnimation(view.getContext(), android.R.anim.fade_in);
+                    fadeInAnimation.setDuration(10);
+                    view.startAnimation(fadeInAnimation);
 
-                    if (!departure.getText().equals(getString(R.string.departure)))
-                        start.putExtra("departure_text", departure.getText());
+                    Intent startIntent = new Intent(MainActivity.this, TimetablesActivity.class);
 
-                    start.putExtra("type", "departure");
-
-                    start.putExtra("activity", "departure");
-                    start.putExtra("getTextArrival", arrival.getText());
-                    startActivity(start);
-
-                    // check location permission
-                    if (ContextCompat.checkSelfPermission(MainActivity.this,
-                            Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-                        ActivityCompat.requestPermissions(MainActivity.this,
-                                new String[] { Manifest.permission.ACCESS_FINE_LOCATION }, 1);
-                    }
-                } else {
-                    Toasty.error(MainActivity.this, getString(R.string.errorconnection), Toast.LENGTH_LONG, true)
-                            .show();
-                }
-            }
-        });
-
-        arrival.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                if (isOnline()) {
-                    // passaggio di stringhe tra activity
-                    Intent start = new Intent(MainActivity.this, SearchActivity.class);
-
-                    if (!arrival.getText().equals(getString(R.string.arrival)))
-                        start.putExtra("arrival_text", arrival.getText());
-
-                    start.putExtra("type", "arrival");
-                    start.putExtra("activity", "arrival");
-                    start.putExtra("getTextDeparture", departure.getText());
-                    startActivity(start);
-
-                    // check location permission
-                    if (ContextCompat.checkSelfPermission(MainActivity.this,
-                            Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-                        ActivityCompat.requestPermissions(MainActivity.this,
-                                new String[] { Manifest.permission.ACCESS_FINE_LOCATION }, 1);
-                    }
-                } else {
-                    Toasty.error(MainActivity.this, getString(R.string.errorconnection), Toast.LENGTH_LONG, true)
-                            .show();
-
-                }
-            }
-        });
-
-        floatingActionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                if (!departure.getText().equals(getString(R.string.departure))
-                        && !arrival.getText().equals(getString(R.string.arrival))) {
-
-                    if (isOnline()) {
-
-                        Intent start = new Intent(MainActivity.this, TimetablesActivity.class);
-
-                        if (spinner.getSelectedItem().toString().equals(getString(R.string.school_hours))) {
-                            start.putExtra("period", "invernale");
-                        } else {
-                            start.putExtra("period", "estiva");
-                        }
-
-                        start.putExtra("departure", departure.getText());
-                        start.putExtra("arrival", arrival.getText());
-                        startActivity(start);
-
-                        editor.putString("sort", "0");
-                        editor.commit();
-                        try {
-                            AddData(departure.getText().toString(), arrival.getText().toString());
-                        } catch (Exception e) {
-                            Log.e(getString(R.string.app_name), e.toString());
-
-                        }
-
+                    if (spinner.getSelectedItem().toString().equals(getString(R.string.school_hours))) {
+                        startIntent.putExtra("period", "invernale");
                     } else {
-                        Toasty.error(MainActivity.this, getString(R.string.errorconnection), Toast.LENGTH_LONG, true)
-                                .show();
+                        startIntent.putExtra("period", "estiva");
+                    }
+
+                    startIntent.putExtra("departure", departure.getText());
+                    startIntent.putExtra("arrival", arrival.getText());
+                    startActivity(startIntent);
+
+                    editor.putString("sort", "0");
+                    editor.commit();
+                    try {
+                        AddData(departure.getText().toString(), arrival.getText().toString());
+                    } catch (Exception e) {
+                        Log.e(getString(R.string.app_name), e.toString());
+
                     }
 
                 } else {
-                    Toasty.error(MainActivity.this, getString(R.string.toast_departure_arrival), Toast.LENGTH_LONG,
-                            true).show();
-
+                    Snackbar snack = Snackbar.make(coordinatorLayout,
+                            getString(R.string.errorconnection), Snackbar.LENGTH_SHORT).setAnchorView(R.id.layout);
+                    SnackbarMaterial.configSnackbar(this, snack);
+                    snack.show();
                 }
-            }
 
-        });
+            } else {
+                Snackbar snack = Snackbar.make(coordinatorLayout,
+                        getString(R.string.toast_departure_arrival), Snackbar.LENGTH_SHORT).setAnchorView(R.id.layout);
+                SnackbarMaterial.configSnackbar(this, snack);
+                snack.show();
 
-        fab1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                final String name = settings.getString("item", null);
 
-                if (name != null) {
-                    new MaterialDialog.Builder(MainActivity.this).title(getString(R.string.sure))
-                            .positiveText(getString(R.string.yes)).negativeText(getString(R.string.no))
-                            .onPositive(new MaterialDialog.SingleButtonCallback() {
-                                @Override
-                                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                                    mDatabaseHelper.deleteName(name.split("\n")[0], name.split("\n")[1]);
-
-                                    toggle.setDrawerIndicatorEnabled(true);
-                                    toggle.setHomeAsUpIndicator(R.drawable.ic_arrow_back);
-                                    animateFAB();
-                                    fab.hide();
-                                    Objects.requireNonNull(getSupportActionBar()).setTitle(getString(R.string.search));
-
-                                    // set INVISIBLE list and recent
-                                    list.setVisibility(View.INVISIBLE);
-                                    recent.setVisibility(View.INVISIBLE);
-                                    // reload listView
-                                    populateListView();
-
-                                    // update item
-                                    editor.putString("item", null);
-                                    editor.commit();
-
-                                    select[0] = 1;
-
-                                }
-                            })
-
-                            .show();
-
-                }
             }
         });
 
-        drawer = findViewById(R.id.drawer_layout);
-        toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open,
-                R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
-        toggle.syncState();
-
-        navigationView = findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
 
     }
 
     public boolean isOnline() {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
-        return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnectedOrConnecting();
+        return Objects.requireNonNull(cm).getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnectedOrConnecting();
     }
 
     public void AddData(String departure, String arrival) {
@@ -444,84 +414,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         while (data.moveToNext()) {
             dataRecents.add(data.getString(1) + "\n" + data.getString(2));
             list.setVisibility(View.VISIBLE);
-            recent.setVisibility(View.VISIBLE);
 
         }
-        String[] arr = dataRecents.toArray(new String[dataRecents.size()]);
+        String[] arr = dataRecents.toArray(new String[0]);
 
         // set data to Adapter
         adapter = new CustomAdapterRecents(MainActivity.this, R.layout.row_recent, R.id.name, arr);
         listView.setAdapter(adapter);
 
-        // dynamic listview
-        if (listView.getAdapter().getCount() > 4) {
-            listView.getLayoutParams().height = 700;
-            list.getLayoutParams().height = 750;
 
-            listView.requestLayout();
-        }
+        listView.setOnItemClickListener((parent, view, position, id) -> {
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-                if (select[0] == 1) {
-                    String name = (String) parent.getItemAtPosition(position);
-                    departure.setText(name.split("\n")[0]);
-                    arrival.setText(name.split("\n")[1]);
-                    departure.setTextColor(Color.BLACK);
-                    arrival.setTextColor(Color.BLACK);
-                    select[0] = 2;
-                }
+            if (select[0] == 1) {
+                String name = (String) parent.getItemAtPosition(position);
+                departure.setText(name.split("\n")[0]);
+                arrival.setText(name.split("\n")[1]);
+                departure.setTextColor(Color.BLACK);
+                arrival.setTextColor(Color.BLACK);
+                select[0] = 2;
             }
         });
 
-        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(final AdapterView<?> adapterView, View view, final int position, long id) {
-                if (select[0] == 1) {
-
-                    vibrator();
-                    final String name = (String) adapterView.getItemAtPosition(position);
-                    editor.putString("item", name);
-                    editor.commit();
-
-                    fab.show();
-                    animateFAB();
-
-                    adapterView.getChildAt(position).setBackgroundColor(Color.parseColor("#e0e0e0"));
-                    Objects.requireNonNull(getSupportActionBar()).setTitle(getString(R.string.delete));
-                    DrawerArrowDrawable homeDrawable;
-                    getSupportActionBar().setHomeButtonEnabled(true);
-                    getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-                    homeDrawable = new DrawerArrowDrawable(toolbar.getContext());
-                    toolbar.setNavigationIcon(homeDrawable);
-                    toggle.setDrawerIndicatorEnabled(false);
-                    toggle.setHomeAsUpIndicator(R.drawable.ic_arrow_back);
-
-                    toggle.setToolbarNavigationClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            if (!drawer.isDrawerVisible(GravityCompat.START)) {
-                                adapterView.getChildAt(position).setBackgroundColor(Color.WHITE);
-                                toggle.setDrawerIndicatorEnabled(true);
-                                toggle.setHomeAsUpIndicator(R.drawable.ic_arrow_back);
-                                animateFAB();
-                                fab.hide();
-                                Objects.requireNonNull(getSupportActionBar()).setTitle(getString(R.string.search));
-                                editor.putString("item", null);
-                                select[0] = 1;
-                                editor.apply();
-
-                            }
-                        }
-                    });
-                    select[0] = 1;
-
-                }
-                return false;
-            }
-        });
 
     }
 
@@ -530,91 +443,79 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         RequestQueue queue = Volley.newRequestQueue(this);
         JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.GET, url, null,
-                new Response.Listener<JSONObject>() {
+                response -> {
+                    try {
 
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        try {
+                        JSONObject json_raw = new JSONObject(response.toString());
+                        String linee = json_raw.getString("list");
 
-                            JSONObject json_raw = new JSONObject(response.toString());
-                            String linee = json_raw.getString("list");
-                            JSONArray lineeArr = new JSONArray(linee);
+                        JSONObject lineeArr = new JSONObject(linee);
 
-                            JSONObject scorro_orari = new JSONObject(lineeArr.getString(0));
+                        String description = lineeArr.getString("routes");
 
-                            String description = scorro_orari.getString("routes");
-                            JSONArray lineeArr2 = new JSONArray(description);
-                            for (int i = 0; i < lineeArr2.length(); i++) {
-                                String corse = lineeArr2.getString(i);
+                        JSONArray lineeArr2 = new JSONArray(description);
+                        for (int i = 0; i < lineeArr2.length(); i++) {
+                            String corse = lineeArr2.getString(i);
 
-                                lista = getSharedPreferences("listRoutes", 0);
-                                editor = lista.edit();
-                                editor.putString(Integer.toString(i), corse);
-                                editor.apply();
-                            }
-
-                        } catch (JSONException ignored) {}
-                    }
-
-                }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        int error_code = error.networkResponse.statusCode;
-
-                        if (error_code == 503) {
-                            listRoutes("https://mediterraneabus-api.glitch.me/?lista");
+                            lista = getSharedPreferences("listRoutes", 0);
+                            editor = lista.edit();
+                            editor.putString(Integer.toString(i), corse);
+                            editor.apply();
                         }
-                    }
 
-                });
+
+                    } catch (JSONException ignored) {
+                    }
+                }, error -> listRoutes(getString(R.string.server) + "?lista"));
         queue.add(getRequest);
 
     }
 
-    public void animateFAB() {
-
-        if (isFabOpen) {
-
-            fab.startAnimation(rotate_backward);
-            fab1.startAnimation(fab_close);
-            fab1.setClickable(false);
-            isFabOpen = false;
-
-        } else {
-
-            fab.startAnimation(rotate_forward);
-            fab1.startAnimation(fab_open);
-            fab1.setClickable(true);
-            isFabOpen = true;
-
-        }
-    }
-
     public void directSearch(View view) {
         Button button_name = (Button) view;
-
-        String name = button_name.getText().toString();
+        name = button_name.getText().toString();
         if (isOnline()) {
+                if (name.split("::")[0].equals("options")) {
+                    powerMenu = new PowerMenu.Builder(this)
+                            .addItem(new PowerMenuItem(getString(R.string.delete), false))
+                            .setAnimation(MenuAnimation.SHOWUP_TOP_RIGHT)
+                            .setMenuRadius(10f) // sets the corner radius.
+                            .setMenuShadow(10f) // sets the corner radius.
+                            .setShowBackground(false) // sets the shadow.
+                            .setTextColor(this.getResources().getColor(android.R.color.black))
+                            .setSelectedTextColor(Color.WHITE)
+                            .setMenuColor(Color.WHITE)
+                            .setOnMenuItemClickListener(onMenuItemClickListener)
+                            .build();
+                    powerMenu.showAsDropDown(view, -5, 0);
+                }
 
-            Intent start = new Intent(MainActivity.this, TimetablesActivity.class);
+             else {
+                Intent start = new Intent(MainActivity.this, TimetablesActivity.class);
 
-            if (spinner.getSelectedItem().toString().equals(getString(R.string.school_hours))) {
-                start.putExtra("period", "invernale");
-            } else {
-                start.putExtra("period", "estiva");
+                if (spinner.getSelectedItem().toString().equals(getString(R.string.school_hours))) {
+                    start.putExtra("period", "invernale");
+                } else {
+                    start.putExtra("period", "estiva");
+                }
+
+                start.putExtra("departure", name.split("::")[1].split("\n")[0]);
+                start.putExtra("arrival", name.split("\n")[1]);
+                startActivity(start);
+                AddData(name.split("::")[1].split("\n")[0], name.split("\n")[1]);
+                editor.putString("sort", "0");
+                editor.commit();
+
             }
 
-            start.putExtra("departure", name.split("\n")[0]);
-            start.putExtra("arrival", name.split("\n")[1]);
-            startActivity(start);
-            AddData(name.split("\n")[0], name.split("\n")[1]);
-            editor.putString("sort", "0");
-            editor.commit();
+        } else {
+                Snackbar snack = Snackbar.make(coordinatorLayout,
+                        getString(R.string.errorconnection), Snackbar.LENGTH_SHORT).setAnchorView(R.id.layout);
+                SnackbarMaterial.configSnackbar(this, snack);
+                snack.show();
 
-        } else
-            Toasty.error(MainActivity.this, getString(R.string.errorconnection), Toast.LENGTH_LONG, true).show();
-
-    }
+            }
+        }
 
     public void vibrator() {
 
@@ -629,69 +530,29 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onBackPressed() {
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
+
+        final String item = settings.getString("item", null);
+
+        if (select[0] == 2 && item != null) {
+            Objects.requireNonNull(getSupportActionBar()).setTitle(getString(R.string.search));
+            select[0] = 1;
+            // set INVISIBLE list and recent
+            list.setVisibility(View.INVISIBLE);
+            // reload listView
+            populateListView();
+
         } else {
-            final String item = settings.getString("item", null);
+            this.finish();
+            Intent intent = new Intent(Intent.ACTION_MAIN);
+            intent.addCategory(Intent.CATEGORY_HOME);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
 
-            if (select[0] == 2 && item != null) {
-                animateFAB();
-                fab.hide();
-                Objects.requireNonNull(getSupportActionBar()).setTitle(getString(R.string.search));
-                select[0] = 1;
-                // set INVISIBLE list and recent
-                list.setVisibility(View.INVISIBLE);
-                recent.setVisibility(View.INVISIBLE);
-                // reload listView
-                populateListView();
-
-            } else {
-                this.finish();
-                Intent intent = new Intent(Intent.ACTION_MAIN);
-                intent.addCategory(Intent.CATEGORY_HOME);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
-
-                int pid = android.os.Process.myPid();
-                android.os.Process.killProcess(pid);
-                super.onBackPressed();
-            }
+            int pid = android.os.Process.myPid();
+            android.os.Process.killProcess(pid);
+            super.onBackPressed();
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    @SuppressWarnings("StatementWithEmptyBody")
-    @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
-        int id = item.getItemId();
-
-        if (id == R.id.nav_search) {
-            // Handle the camera action
-        } else if (id == R.id.nav_setting) {
-            Toasty.normal(MainActivity.this, getString(R.string.settings_alert), getDrawable(R.drawable.smile)).show();
-
-        } else if (id == R.id.nav_info) {
-            Intent mainActivity = new Intent(MainActivity.this, InfoActivity.class);
-            startActivity(mainActivity);
-
-        }
-
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
-    }
 
 }

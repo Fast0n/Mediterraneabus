@@ -7,27 +7,29 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.Uri;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.fast0n.mediterraneabus.BuildConfig;
 import com.fast0n.mediterraneabus.Changelog;
 import com.fast0n.mediterraneabus.MainActivity;
 import com.fast0n.mediterraneabus.R;
+import com.fast0n.mediterraneabus.java.SnackbarMaterial;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.Objects;
 
-import es.dmoral.toasty.Toasty;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.content.ContextCompat;
 
 public class InfoActivity extends AppCompatActivity {
 
@@ -35,13 +37,24 @@ public class InfoActivity extends AppCompatActivity {
     ArrayList<DataInfo> dataInfos;
     ListView listView;
     CustomAdapterInfo adapter;
+    CoordinatorLayout coordinatorLayout;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_info);
-        // set title activity in the toolbar
-        Objects.requireNonNull(getSupportActionBar()).setTitle(getString(R.string.info));
+
+
+
+        View viewStatusbar = getWindow().getDecorView();
+        viewStatusbar.setSystemUiVisibility(viewStatusbar.getSystemUiVisibility() | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        getWindow().setStatusBarColor(ContextCompat.getColor(this ,android.R.color.white));
+
+
+
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        Button button = toolbar.findViewById(R.id.exit);
 
         // set color/text/icon in the task
         Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher_foreground);
@@ -49,15 +62,10 @@ public class InfoActivity extends AppCompatActivity {
                 getResources().getColor(R.color.task));
         InfoActivity.this.setTaskDescription(taskDesc);
 
-        // set row icon in the toolbar
-        ActionBar actionBar = getSupportActionBar();
-        actionBar.setHomeButtonEnabled(true);
-        actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setDisplayShowHomeEnabled(true);
-
         // java addresses
         listView = findViewById(R.id.list_info);
         dataInfos = new ArrayList<>();
+        coordinatorLayout = findViewById(R.id.cordinatorLayout);
 
         // banner google
         MobileAds.initialize(this, "ca-app-pub-9646303341923759~6818726547");
@@ -86,18 +94,18 @@ public class InfoActivity extends AppCompatActivity {
         listView.setAdapter(adapter);
 
         // setOnItemClickListener listview
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                switch (position) {
+        listView.setOnItemClickListener((parent, view, position, id) -> {
+            switch (position) {
                 case 1:
 
                     if (isOnline())
-                        new Changelog(InfoActivity.this, true);
-
-                    else
-                        Toasty.error(InfoActivity.this, getString(R.string.errorconnection), Toast.LENGTH_LONG, true)
-                                .show();
+                        new Changelog(InfoActivity.this, true, coordinatorLayout);
+                    else {
+                        Snackbar snack = Snackbar.make(coordinatorLayout,
+                                getString(R.string.errorconnection), Snackbar.LENGTH_SHORT).setAnchorView(R.id.layout);
+                        SnackbarMaterial.configSnackbar(getApplicationContext(), snack);
+                        snack.show();
+                    }
 
                     break;
 
@@ -123,9 +131,14 @@ public class InfoActivity extends AppCompatActivity {
                     startActivity(intent6);
                     break;
 
-                }
-
             }
+
+        });
+
+
+        button.setOnClickListener(view -> {
+            startActivity(new Intent(getApplicationContext(), MainActivity.class));
+
         });
 
     }
@@ -133,21 +146,21 @@ public class InfoActivity extends AppCompatActivity {
     public boolean isOnline() {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
-        return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnectedOrConnecting();
+        return Objects.requireNonNull(cm).getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnectedOrConnecting();
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
         switch (item.getItemId()) {
-        case android.R.id.home:
+            case android.R.id.home:
 
-            finish();
-            Intent mainActivity = new Intent(InfoActivity.this, MainActivity.class);
-            startActivity(mainActivity);
-            return true;
-        default:
-            return super.onOptionsItemSelected(item);
+                finish();
+                Intent mainActivity = new Intent(InfoActivity.this, MainActivity.class);
+                startActivity(mainActivity);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 

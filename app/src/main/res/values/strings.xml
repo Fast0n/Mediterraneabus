@@ -28,6 +28,7 @@
     <string name="nearest">Nearest</string>
     <string name="warning">Warning</string>
     <string name="warning_content">Please enabled GPS from settings</string>
+    <string name="gps_title">Use the current location</string>
     <string name="cancel">Cancel</string>
 
     <!-- TimetableActivity -->
@@ -36,6 +37,8 @@
     <string name="sort">Sort order</string>
     <string name="timetable_not_found">Timetable not found</string>
     <string name="share">Share</string>
+    <string name="share_to">Share to…</string>
+
     <string name="timetables">Timetables</string>
 
     <!-- InfoActivity -->
@@ -66,4 +69,7 @@
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <!-- server -->
+    <string name="server" translatable="false">http://51.15.222.184:1331/</string>
 </resources>

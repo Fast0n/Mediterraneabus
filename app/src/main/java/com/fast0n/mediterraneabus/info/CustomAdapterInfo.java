@@ -19,12 +19,6 @@ public class CustomAdapterInfo extends ArrayAdapter<DataInfo> implements View.On
     private Context mContext;
     private int lastPosition = -1;
 
-    // View lookup cache
-    private static class ViewHolder {
-        TextView txtName;
-        ImageView icon;
-    }
-
     CustomAdapterInfo(ArrayList<DataInfo> data, Context context) {
         super(context, R.layout.row_info, data);
         this.dataSet = data;
@@ -49,7 +43,7 @@ public class CustomAdapterInfo extends ArrayAdapter<DataInfo> implements View.On
             viewHolder = new ViewHolder();
             LayoutInflater inflater = LayoutInflater.from(getContext());
             convertView = inflater.inflate(R.layout.row_info, parent, false);
-            viewHolder.txtName =convertView.findViewById(R.id.name);
+            viewHolder.txtName = convertView.findViewById(R.id.name);
             viewHolder.icon = convertView.findViewById(R.id.icon);
 
             convertView.setTag(viewHolder);
@@ -67,5 +61,11 @@ public class CustomAdapterInfo extends ArrayAdapter<DataInfo> implements View.On
         viewHolder.icon.setTag(position);
 
         return convertView;
+    }
+
+    // View lookup cache
+    private static class ViewHolder {
+        TextView txtName;
+        ImageView icon;
     }
 }

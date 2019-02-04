@@ -8,58 +8,54 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.os.Build;
-import android.os.VibrationEffect;
-import android.os.Vibrator;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
-import android.util.Log;
+import android.os.Vibrator;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
-import android.webkit.URLUtil;
-import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
 import com.fast0n.mediterraneabus.MainActivity;
 import com.fast0n.mediterraneabus.R;
+import com.fast0n.mediterraneabus.java.SnackbarMaterial;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.InterstitialAd;
 import com.google.android.gms.ads.MobileAds;
+import com.google.android.material.snackbar.Snackbar;
+import com.skydoves.powermenu.MenuAnimation;
+import com.skydoves.powermenu.OnMenuItemClickListener;
+import com.skydoves.powermenu.PowerMenu;
+import com.skydoves.powermenu.PowerMenuItem;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedInputStream;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Objects;
 
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+
 public class TimetablesActivity extends AppCompatActivity {
 
+    final int[] select = {1};
+    PowerMenu powerMenu;
     ActionBar actionBar;
     AdView mAdView;
     ArrayList<DataTimetables> dataHours;
@@ -67,16 +63,40 @@ public class TimetablesActivity extends AppCompatActivity {
     ProgressBar loading;
     SharedPreferences settings;
     SharedPreferences.Editor editor;
-    String departure, arrival, period;
-    String sort;
+    String departure, arrival, period, sort, name;
     Toolbar toolbar;
     Vibrator v;
-    private Animation fab_open, fab_close, rotate_forward, rotate_backward;
-    private Boolean isFabOpen = false;
+    CoordinatorLayout coordinatorLayout;
     private CustomAdapterTimetables adapter;
-    private FloatingActionButton fab, fab1;
     private InterstitialAd mInterstitialAd;
-    final int[] select = { 1 };
+    private OnMenuItemClickListener<PowerMenuItem> onMenuItemClickListener = new OnMenuItemClickListener<PowerMenuItem>() {
+        @Override
+        public void onItemClick(int position, PowerMenuItem item) {
+
+            powerMenu.setSelectedPosition(position);
+            String ride = name.split("::")[1];
+            String time = name.split("::")[2];
+            String name_time = name.split("::")[3];
+            String time1 = name.split("::")[4];
+            String name_time1 = name.split("::")[5];
+
+            if (!ride.equals(getString(R.string.timetable_not_found))) {
+                String share = "🚏 " + getString(R.string.departure) + " "
+                        + name_time.toUpperCase() + "\n" + ride + "\n🕜 "
+                        + getString(R.string.timetables) + " " + time + " --> "
+                        + time1 + "\n" + getString(R.string.arrival) + " "
+                        + name_time1.toUpperCase();
+
+                Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
+                sharingIntent.setType("text/plain");
+                sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, share);
+                startActivity(Intent.createChooser(sharingIntent, getString(R.string.share_to)));
+            }
+
+            powerMenu.dismiss();
+
+        }
+    };
 
     @SuppressLint("CommitPrefEdits")
     @Override
@@ -102,16 +122,13 @@ public class TimetablesActivity extends AppCompatActivity {
         actionBar.setDisplayShowHomeEnabled(true);
 
         // java addresses
-        fab = findViewById(R.id.fab);
-        fab1 = findViewById(R.id.fab1);
-        fab_close = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fab_close);
-        fab_open = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fab_open);
         listView = findViewById(R.id.list);
         loading = findViewById(R.id.progressBar);
         mAdView = findViewById(R.id.adView1);
-        rotate_backward = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_backward);
-        rotate_forward = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_forward);
         v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        coordinatorLayout = findViewById(R.id.cordinatorLayout);
+
+        listView.setSelector(android.R.color.transparent);
 
         settings = getSharedPreferences("sharedPreferences", 0);
         editor = settings.edit();
@@ -142,37 +159,10 @@ public class TimetablesActivity extends AppCompatActivity {
         arrival = extras.getString("arrival");
         period = extras.getString("period");
 
-        final String url = "https://mediterraneabus-api.herokuapp.com/?periodo=invernale&percorso_linea=" + departure
+        final String url = getString(R.string.server) + "?periodo=invernale&percorso_linea=" + departure
                 + "&percorso_linea1=" + arrival + "&sort_by=time";
 
         get(url);
-
-        fab1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                final String share = settings.getString("share", null);
-
-                Intent sendIntent = new Intent();
-                sendIntent.setAction(Intent.ACTION_SEND);
-                sendIntent.putExtra(Intent.EXTRA_TEXT, share);
-                sendIntent.setType("text/plain");
-                startActivity(sendIntent);
-
-                Objects.requireNonNull(getSupportActionBar()).setTitle(getString(R.string.solutions));
-                actionBar.setHomeAsUpIndicator(R.drawable.ic_arrow_back);
-                fab.hide();
-                animateFAB();
-
-                final String url = "https://mediterraneabus-api.herokuapp.com/?periodo=invernale&percorso_linea="
-                        + departure + "&percorso_linea1=" + arrival + "&sort_by=time";
-
-                get(url);
-                select[0] = 1;
-                editor.putString("share", null);
-                editor.apply();
-
-            }
-        });
 
     }
 
@@ -181,171 +171,145 @@ public class TimetablesActivity extends AppCompatActivity {
         url = url.replaceAll(" ", "%20");
         RequestQueue queue = Volley.newRequestQueue(this);
 
-        try {
+        JsonArrayRequest getRequest = new JsonArrayRequest(Request.Method.GET, url, null,
+                response -> {
+                    try {
+                        dataHours = new ArrayList<>();
 
-            URL url43 = new URL(url);
-            HttpURLConnection http = (HttpURLConnection) url43.openConnection();
-            int statusCode = http.getResponseCode();
+                        JSONArray json_raw = new JSONArray(response.toString());
 
-            Log.e("error", String.valueOf(statusCode));
-
-        } catch (Exception ignored) {
-        }
-
-        JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.GET, url, null,
-                new Response.Listener<JSONObject>() {
-
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        try {
-                            dataHours = new ArrayList<>();
-
-                            JSONObject json_raw = new JSONObject(response.toString());
-                            String linee = json_raw.getString("linee");
-                            JSONArray arrayLinee = new JSONArray(linee);
-
-                            for (int i = 0; i < arrayLinee.length(); i++) {
-                                String corse = arrayLinee.getString(i);
-
-                                JSONObject scorroCorse = new JSONObject(corse);
-
-                                String nomeCorsa = scorroCorse.getString("corsa");
-                                String orari = scorroCorse.getString("orari");
-
-                                JSONArray arrayOrari = new JSONArray(orari);
-                                for (int j = 0; j < arrayOrari.length(); j++) {
-
-                                    String partenza2 = arrayOrari.getString(j);
-                                    JSONObject scorrOrari = new JSONObject(partenza2);
-
-                                    String partenza = scorrOrari.getString("partenza");
-                                    String arrivo = scorrOrari.getString("arrivo");
-
-                                    @SuppressLint("SimpleDateFormat")
-                                    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm");
-                                    Date startDate = simpleDateFormat.parse(partenza);
-                                    Date endDate = simpleDateFormat.parse(arrivo);
-
-                                    long difference = endDate.getTime() - startDate.getTime();
-                                    if (difference < 0) {
-                                        Date dateMax = simpleDateFormat.parse("24:00");
-                                        Date dateMin = simpleDateFormat.parse("00:00");
-                                        difference = (dateMax.getTime() - startDate.getTime())
-                                                + (endDate.getTime() - dateMin.getTime());
-                                    }
-                                    int days = (int) (difference / (1000 * 60 * 60 * 24));
-                                    int hours = (int) ((difference - (1000 * 60 * 60 * 24 * days)) / (1000 * 60 * 60));
-                                    int min = (int) (difference - (1000 * 60 * 60 * 24 * days)
-                                            - (1000 * 60 * 60 * hours)) / (1000 * 60);
-
-                                    int length = String.valueOf(hours).length();
-                                    String ora = null;
-
-                                    if (length == 1) {
-                                        ora = "0" + hours;
-                                    }
-
-                                    dataHours.add(new DataTimetables(nomeCorsa, partenza, arrivo, departure, arrival,
-                                            ora + ":" + min));
-
-                                }
-
-                            }
-
-                            adapter = new CustomAdapterTimetables(dataHours, getApplicationContext());
-
-                            listView.setAdapter(adapter);
-
-                            loading.setVisibility(View.INVISIBLE);
-
-                        } catch (JSONException | ParseException ignored) {}
-                    }
-                }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        int error_code = error.networkResponse.statusCode;
-
-                        if (error_code == 503) {
-                            String url2 = "https://mediterraneabus-api.glitch.me/?periodo=invernale&percorso_linea="
-                                    + departure + "&percorso_linea1=" + arrival + "&sort_by=time";
-                            get(url2);
-                        } else if (error_code == 404) {
+                        if (response.toString().equals("[]")) {
                             dataHours = new ArrayList<>();
                             dataHours.add(new DataTimetables(getString(R.string.timetable_not_found), "00:00", "00:00",
                                     departure, arrival, "00:00"));
-                            adapter = new CustomAdapterTimetables(dataHours, getApplicationContext());
+                            adapter = new CustomAdapterTimetables(TimetablesActivity.this, dataHours);
 
                             listView.setAdapter(adapter);
 
                             loading.setVisibility(View.INVISIBLE);
                         }
 
+                        for (int j = 0; j < json_raw.length(); j++) {
+
+                            String partenza2 = json_raw.getString(j);
+                            JSONObject scorrOrari = new JSONObject(partenza2);
+                            String nomeCorsa = scorrOrari.getString("a");
+                            String partenza = scorrOrari.getString("b");
+                            String arrivo = scorrOrari.getString("c");
+
+                            @SuppressLint("SimpleDateFormat")
+                            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm");
+                            Date startDate = simpleDateFormat.parse(partenza);
+                            Date endDate = simpleDateFormat.parse(arrivo);
+
+                            long difference = endDate.getTime() - startDate.getTime();
+                            if (difference < 0) {
+                                Date dateMax = simpleDateFormat.parse("24:00");
+                                Date dateMin = simpleDateFormat.parse("00:00");
+                                difference = (dateMax.getTime() - startDate.getTime())
+                                        + (endDate.getTime() - dateMin.getTime());
+                            }
+                            int days = (int) (difference / (1000 * 60 * 60 * 24));
+                            int hours = (int) ((difference - (1000 * 60 * 60 * 24 * days)) / (1000 * 60 * 60));
+                            int mins = (int) (difference - (1000 * 60 * 60 * 24 * days)
+                                    - (1000 * 60 * 60 * hours)) / (1000 * 60);
+
+                            int length = String.valueOf(hours).length();
+                            String ora = null;
+
+                            int length1 = String.valueOf(mins).length();
+                            String minuti;
+
+                            if (length == 1) {
+                                ora = "0" + hours;
+                            }
+                            if (length1 == 1)
+                                minuti = "0" + mins;
+                            else
+                                minuti = String.valueOf(mins);
+
+                            dataHours.add(new DataTimetables(nomeCorsa, partenza, arrivo, departure, arrival,
+                                    ora + ":" + minuti));
+
+                        }
+
+
+                        adapter = new CustomAdapterTimetables(TimetablesActivity.this, dataHours);
+
+                        listView.setAdapter(adapter);
+                        loading.setVisibility(View.INVISIBLE);
+
+                    } catch (JSONException ignored) {
+                        dataHours = new ArrayList<>();
+                        dataHours.add(new DataTimetables(getString(R.string.timetable_not_found), "00:00", "00:00",
+                                departure, arrival, "00:00"));
+                        adapter = new CustomAdapterTimetables(TimetablesActivity.this, dataHours);
+
+                        listView.setAdapter(adapter);
+
+                        loading.setVisibility(View.INVISIBLE);
+
+                    } catch (ParseException e) {
+                        e.printStackTrace();
                     }
-                });
+                }, error -> {
+
+            dataHours = new ArrayList<>();
+            dataHours.add(new DataTimetables(getString(R.string.timetable_not_found), "00:00", "00:00",
+                    departure, arrival, "00:00"));
+            adapter = new CustomAdapterTimetables(TimetablesActivity.this, dataHours);
+
+            listView.setAdapter(adapter);
+
+            loading.setVisibility(View.INVISIBLE);
+
+
+        });
 
         // add it to the RequestQueue
         queue.add(getRequest);
 
-        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int position, long id) {
-                if (select[0] == 1) {
-                    select[0] = 2;
-
-                    vibrator();
-                    adapterView.getChildAt(position).setBackgroundColor(Color.parseColor("#e0e0e0"));
-
-                    Objects.requireNonNull(getSupportActionBar()).setTitle(getString(R.string.share));
-                    actionBar.setHomeAsUpIndicator(R.drawable.ic_close);
-
-                    TextView ride = view.findViewById(R.id.ride);
-                    TextView time = view.findViewById(R.id.time);
-                    TextView name_time = view.findViewById(R.id.name_time);
-                    TextView time1 = view.findViewById(R.id.time1);
-                    TextView name_time1 = view.findViewById(R.id.name_time1);
-
-                    String share = "🚏 " + getString(R.string.departure) + " "
-                            + name_time.getText().toString().toUpperCase() + "\n" + ride.getText().toString() + "\n🕜 "
-                            + getString(R.string.timetables) + " " + time.getText().toString() + " --> "
-                            + time1.getText().toString() + "\n" + getString(R.string.arrival) + " "
-                            + name_time1.getText().toString().toUpperCase();
-
-                    editor.putString("share", share);
-                    editor.commit();
-
-                    fab.show();
-                    animateFAB();
-                }
-
-                return false;
-            }
-        });
 
     }
 
-    public void animateFAB() {
-
-        if (isFabOpen) {
-
-            fab.startAnimation(rotate_backward);
-            fab1.startAnimation(fab_close);
-            fab1.setClickable(false);
-            isFabOpen = false;
+    public void more(View view) {
+        Button button_name = (Button) view;
+        name = button_name.getText().toString();
+        if (isOnline()) {
+            if (name.split("::")[0].equals("options")) {
+                powerMenu = new PowerMenu.Builder(this)
+                        .addItem(new PowerMenuItem(getString(R.string.share), false)) // add an item.
+                        .setAnimation(MenuAnimation.SHOWUP_TOP_RIGHT) // Animation start point (TOP | LEFT).
+                        .setMenuRadius(10f) // sets the corner radius.
+                        .setMenuShadow(10f) // sets the corner radius.
+                        .setShowBackground(false) // sets the shadow.
+                        .setTextColor(this.getResources().getColor(android.R.color.black))
+                        .setSelectedTextColor(Color.WHITE)
+                        .setMenuColor(Color.WHITE)
+                        .setOnMenuItemClickListener(onMenuItemClickListener)
+                        .build();
+                powerMenu.showAsDropDown(view, -5, 0);
+            }
 
         } else {
-
-            fab.startAnimation(rotate_forward);
-            fab1.startAnimation(fab_open);
-            fab1.setClickable(true);
-            isFabOpen = true;
-
+            Snackbar snack = Snackbar.make(coordinatorLayout,
+                    getString(R.string.errorconnection), Snackbar.LENGTH_SHORT).setAnchorView(R.id.layout);
+            SnackbarMaterial.configSnackbar(this, snack);
+            snack.show();
         }
+
+    }
+
+    public boolean isOnline() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        return Objects.requireNonNull(cm).getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnectedOrConnecting();
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
 
-        getMenuInflater().inflate(R.menu.sort_menu, menu);
+        getMenuInflater().inflate(R.menu.info_menu, menu);
         return true;
     }
 
@@ -356,74 +320,59 @@ public class TimetablesActivity extends AppCompatActivity {
 
         if (id == R.id.sort) {
 
-            if (mInterstitialAd.isLoaded()) {
-                mInterstitialAd.show();
-            }
+            if (isOnline()) {
 
-            sort = settings.getString("sort", null);
-            new MaterialDialog.Builder(this).title(getString(R.string.sort)).items(R.array.preference_values)
-                    .itemsCallbackSingleChoice(Integer.parseInt(sort), new MaterialDialog.ListCallbackSingleChoice() {
-                        @Override
-                        public boolean onSelection(MaterialDialog dialog, View view, int which, CharSequence text) {
+                if (mInterstitialAd.isLoaded()) {
+                    mInterstitialAd.show();
+                }
+
+                sort = settings.getString("sort", null);
+                new MaterialDialog.Builder(this).title(getString(R.string.sort)).items(R.array.preference_values)
+                        .itemsCallbackSingleChoice(Integer.parseInt(sort), (dialog, view, which, text) -> {
 
                             final Bundle extras = getIntent().getExtras();
                             switch (which) {
-                            case 0:
-
-                                assert extras != null;
-                                departure = extras.getString("departure");
-                                arrival = extras.getString("arrival");
-
-                                final String url2 = "https://mediterraneabus-api.herokuapp.com/?periodo=invernale&percorso_linea="
-                                        + departure + "&percorso_linea1=" + arrival + "&sort_by=time";
-
-                                get(url2);
-
-                                editor.putString("sort", "0");
-                                editor.commit();
-
-                                break;
-                            case 1:
-
-                                assert extras != null;
-                                departure = extras.getString("departure");
-                                arrival = extras.getString("arrival");
-
-                                final String url = "https://mediterraneabus-api.herokuapp.com/?periodo=invernale&percorso_linea="
-                                        + departure + "&percorso_linea1=" + arrival + "&sort_by=line";
-
-                                get(url);
-
-                                editor.putString("sort", "1");
-                                editor.commit();
-                                break;
+                                case 0:
+                                    assert extras != null;
+                                    departure = extras.getString("departure");
+                                    arrival = extras.getString("arrival");
+                                    String url2 = getString(R.string.server) + "?periodo=invernale&percorso_linea="
+                                            + departure + "&percorso_linea1=" + arrival + "&sort_by=time";
+                                    get(url2);
+                                    editor.putString("sort", "0");
+                                    editor.commit();
+                                    break;
+                                case 1:
+                                    assert extras != null;
+                                    departure = extras.getString("departure");
+                                    arrival = extras.getString("arrival");
+                                    String url = getString(R.string.server) + "?periodo=invernale&percorso_linea="
+                                            + departure + "&percorso_linea1=" + arrival + "&sort_by=line";
+                                    get(url);
+                                    editor.putString("sort", "1");
+                                    editor.commit();
+                                    break;
                             }
 
                             return true;
-                        }
-                    }).show();
+                        }).show();
 
+            } else {
+                Snackbar snack = Snackbar.make(coordinatorLayout,
+                        getString(R.string.errorconnection), Snackbar.LENGTH_SHORT).setAnchorView(R.id.layout);
+                SnackbarMaterial.configSnackbar(this, snack);
+                snack.show();
+            }
             return true;
         }
 
         switch (item.getItemId()) {
-        case android.R.id.home:
+            case android.R.id.home:
 
-            closeApplication();
-            return true;
-        default:
-            return super.onOptionsItemSelected(item);
-        }
-    }
-
-    public void vibrator() {
-
-        // Vibrate for 50 milliseconds
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            v.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE));
-        } else {
-            // deprecated in API 26
-            v.vibrate(50);
+                closeApplication();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 
@@ -438,10 +387,8 @@ public class TimetablesActivity extends AppCompatActivity {
 
             Objects.requireNonNull(getSupportActionBar()).setTitle(getString(R.string.solutions));
             actionBar.setHomeAsUpIndicator(R.drawable.ic_arrow_back);
-            fab.hide();
-            animateFAB();
 
-            final String url = "https://mediterraneabus-api.herokuapp.com/?periodo=invernale&percorso_linea="
+            final String url = getString(R.string.server) + "?periodo=invernale&percorso_linea="
                     + departure + "&percorso_linea1=" + arrival + "&sort_by=time";
 
             get(url);
@@ -461,4 +408,5 @@ public class TimetablesActivity extends AppCompatActivity {
             startActivity(mainActivity);
         }
     }
+
 }

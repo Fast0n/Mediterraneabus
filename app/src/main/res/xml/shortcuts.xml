@@ -2,16 +2,16 @@
 <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
 
     <shortcut
-        android:shortcutId="shortcut1"
         android:enabled="true"
         android:icon="@drawable/ic_info_outline"
-        android:shortcutShortLabel="@string/shortcut1"
+        android:shortcutDisabledMessage="@string/shortcut1_disabled"
+        android:shortcutId="shortcut1"
         android:shortcutLongLabel="@string/shortcut1_long"
-        android:shortcutDisabledMessage="@string/shortcut1_disabled">
+        android:shortcutShortLabel="@string/shortcut1">
         <intent
             android:action="action1"
-            android:targetPackage="com.fast0n.mediterraneabus"
-            android:targetClass="com.fast0n.mediterraneabus.info.InfoActivity" />
+            android:targetClass="com.fast0n.mediterraneabus.info.InfoActivity"
+            android:targetPackage="com.fast0n.mediterraneabus" />
     </shortcut>
 
 

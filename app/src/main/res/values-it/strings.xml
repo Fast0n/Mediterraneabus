@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name" >Orari Mediterraneabus</string>
+    <string name="app_name">Orari Mediterraneabus</string>
 
     <!-- main_warning -->
     <string name="title">Attenzione</string>
@@ -27,6 +27,7 @@
     <string name="nearest">Nelle vicinanze</string>
     <string name="warning">Attenzione</string>
     <string name="warning_content">Si prega di abilitare il GPS dalle impostazioni</string>
+    <string name="gps_title">Usa la posizione attuale</string>
     <string name="cancel">Annulla</string>
 
     <!-- TimetableActivity -->
@@ -35,6 +36,7 @@
     <string name="sort">Ordinamento</string>
     <string name="timetable_not_found">Orario non trovato</string>
     <string name="share">Condividi</string>
+    <string name="share_to">Condividi con…</string>
     <string name="timetables">Orari</string>
 
     <!-- InfoActivity -->
