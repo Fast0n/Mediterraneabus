@@ -25,6 +25,11 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
+import androidx.core.app.ActivityCompat;
+
 import com.fast0n.mediterraneabus.GPSTracker;
 import com.fast0n.mediterraneabus.MainActivity;
 import com.fast0n.mediterraneabus.R;
@@ -35,11 +40,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.cardview.widget.CardView;
-import androidx.core.app.ActivityCompat;
 
 
 public class SearchActivity extends AppCompatActivity {
@@ -283,18 +283,16 @@ public class SearchActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                finish();
+        if (item.getItemId() == android.R.id.home) {
+            finish();
 
-                Intent mainActivity = new Intent(SearchActivity.this, MainActivity.class);
-                mainActivity.putExtra("departure", extras.getString("departure_text"));
-                mainActivity.putExtra("arrival", extras.getString("arrival_text"));
-                startActivity(mainActivity);
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+            Intent mainActivity = new Intent(SearchActivity.this, MainActivity.class);
+            mainActivity.putExtra("departure", extras.getString("departure_text"));
+            mainActivity.putExtra("arrival", extras.getString("arrival_text"));
+            startActivity(mainActivity);
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override

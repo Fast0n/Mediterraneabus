@@ -3,10 +3,10 @@ package com.fast0n.mediterraneabus.java;
 import android.content.Context;
 import android.view.ViewGroup;
 
+import androidx.core.view.ViewCompat;
+
 import com.fast0n.mediterraneabus.R;
 import com.google.android.material.snackbar.Snackbar;
-
-import androidx.core.view.ViewCompat;
 
 public class SnackbarMaterial {
     public static void configSnackbar(Context context, Snackbar snack) {

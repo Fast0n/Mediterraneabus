@@ -8,9 +8,9 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.fast0n.mediterraneabus.R;
-
 import androidx.annotation.NonNull;
+
+import com.fast0n.mediterraneabus.R;
 
 public class CustomAdapterRecents extends ArrayAdapter<String> {
     private int groupid;

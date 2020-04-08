@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/Desktop-Mediterraneabus.iml" filepath="$PROJECT_DIR$/Desktop-Mediterraneabus.iml" group="Mediterraneabus" />
       <module fileurl="file://$PROJECT_DIR$/Mediterraneabus.iml" filepath="$PROJECT_DIR$/Mediterraneabus.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/Mediterraneabus-app.iml" filepath="$PROJECT_DIR$/app/Mediterraneabus-app.iml" group="Mediterraneabus/app" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>

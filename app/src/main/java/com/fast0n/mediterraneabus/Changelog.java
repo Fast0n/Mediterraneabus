@@ -6,38 +6,33 @@ import android.os.Build;
 import android.text.Html;
 import android.util.Log;
 
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.fast0n.mediterraneabus.java.SnackbarMaterial;
 import com.google.android.material.snackbar.Snackbar;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
 
 public class Changelog {
     public Changelog(final Context context, final boolean cancellable, CoordinatorLayout coordinatorLayout) {
 
-        final String url = "http://51.15.222.184:1339/";
+        final String url = "https://api.github.com/repos/fast0n/Mediterraneabus/releases/latest";
 
         RequestQueue queue = Volley.newRequestQueue(context);
-        JsonArrayRequest getRequest = new JsonArrayRequest(Request.Method.GET, url, null,
+        JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.GET, url, null,
                 response -> {
                     try {
-                        JSONArray json_raw = new JSONArray(response.toString());
+                        JSONObject json_raw = new JSONObject(response.toString());
 
 
-                        String partenza2 = json_raw.getString(0);
-
-
-                        JSONObject scorrOrari = new JSONObject(partenza2);
-                        String version = scorrOrari.getString("version");
-                        String description = scorrOrari.getString("description");
+                        String version = json_raw.getString("name");
+                        String description = json_raw.getString("body");
 
 
                         if (Build.VERSION.SDK_INT >= 24) {
@@ -58,6 +53,7 @@ public class Changelog {
                                             + description.replace("####", "<strong>").replace("-  ", "<br />\t•")))
                                     .positiveText(context.getString(R.string.close)).show();
                         }
+
 
                     } catch (JSONException e) {
                         e.printStackTrace();

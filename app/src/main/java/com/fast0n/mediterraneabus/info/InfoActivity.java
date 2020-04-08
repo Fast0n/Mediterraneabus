@@ -13,6 +13,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.content.ContextCompat;
+
 import com.fast0n.mediterraneabus.BuildConfig;
 import com.fast0n.mediterraneabus.Changelog;
 import com.fast0n.mediterraneabus.MainActivity;
@@ -25,11 +30,6 @@ import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.Objects;
-
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
-import androidx.core.content.ContextCompat;
 
 public class InfoActivity extends AppCompatActivity {
 
@@ -46,11 +46,9 @@ public class InfoActivity extends AppCompatActivity {
         setContentView(R.layout.activity_info);
 
 
-
         View viewStatusbar = getWindow().getDecorView();
         viewStatusbar.setSystemUiVisibility(viewStatusbar.getSystemUiVisibility() | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-        getWindow().setStatusBarColor(ContextCompat.getColor(this ,android.R.color.white));
-
+        getWindow().setStatusBarColor(ContextCompat.getColor(this, android.R.color.white));
 
 
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -110,25 +108,21 @@ public class InfoActivity extends AppCompatActivity {
                     break;
 
                 case 3:
-                    Intent intent3 = new Intent(Intent.ACTION_VIEW,
-                            Uri.parse("https://github.com/fast0n/mediterraneabus"));
-                    startActivity(intent3);
+                    startActivity(new Intent(Intent.ACTION_VIEW,
+                            Uri.parse("https://github.com/fast0n/mediterraneabus")));
                     break;
 
                 case 4:
-                    Intent intent4 = new Intent(Intent.ACTION_VIEW,
-                            Uri.parse("https://www.instagram.com/mediterraneabus"));
-                    startActivity(intent4);
+                    startActivity(new Intent(Intent.ACTION_VIEW,
+                            Uri.parse("https://www.instagram.com/fast0n")));
                     break;
 
                 case 5:
-                    Intent intent5 = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.paypal.me/Fast0n/0.5"));
-                    startActivity(intent5);
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.paypal.me/Fast0n/0.5")));
                     break;
 
                 case 6:
-                    Intent intent6 = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.instagram.com/fast0n/"));
-                    startActivity(intent6);
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.instagram.com/fast0n/")));
                     break;
 
             }
@@ -152,22 +146,17 @@ public class InfoActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
-        switch (item.getItemId()) {
-            case android.R.id.home:
-
-                finish();
-                Intent mainActivity = new Intent(InfoActivity.this, MainActivity.class);
-                startActivity(mainActivity);
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+            startActivity(new Intent(InfoActivity.this, MainActivity.class));
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
     public void onBackPressed() {
         finish();
-        Intent mainActivity = new Intent(InfoActivity.this, MainActivity.class);
-        startActivity(mainActivity);
+        startActivity(new Intent(InfoActivity.this, MainActivity.class));
     }
 }

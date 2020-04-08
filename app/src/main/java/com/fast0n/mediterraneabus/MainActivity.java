@@ -25,6 +25,13 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.PopupMenu;
+import androidx.appcompat.widget.Toolbar;
+import androidx.cardview.widget.CardView;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -51,13 +58,6 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
-import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.PopupMenu;
-import androidx.appcompat.widget.Toolbar;
-import androidx.cardview.widget.CardView;
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -475,22 +475,20 @@ public class MainActivity extends AppCompatActivity {
         Button button_name = (Button) view;
         name = button_name.getText().toString();
         if (isOnline()) {
-                if (name.split("::")[0].equals("options")) {
-                    powerMenu = new PowerMenu.Builder(this)
-                            .addItem(new PowerMenuItem(getString(R.string.delete), false))
-                            .setAnimation(MenuAnimation.SHOWUP_TOP_RIGHT)
-                            .setMenuRadius(10f) // sets the corner radius.
-                            .setMenuShadow(10f) // sets the corner radius.
-                            .setShowBackground(false) // sets the shadow.
-                            .setTextColor(this.getResources().getColor(android.R.color.black))
-                            .setSelectedTextColor(Color.WHITE)
-                            .setMenuColor(Color.WHITE)
-                            .setOnMenuItemClickListener(onMenuItemClickListener)
-                            .build();
-                    powerMenu.showAsDropDown(view, -5, 0);
-                }
-
-             else {
+            if (name.split("::")[0].equals("options")) {
+                powerMenu = new PowerMenu.Builder(this)
+                        .addItem(new PowerMenuItem(getString(R.string.delete), false))
+                        .setAnimation(MenuAnimation.SHOWUP_TOP_RIGHT)
+                        .setMenuRadius(10f) // sets the corner radius.
+                        .setMenuShadow(10f) // sets the corner radius.
+                        .setShowBackground(false) // sets the shadow.
+                        .setTextColor(this.getResources().getColor(android.R.color.black))
+                        .setSelectedTextColor(Color.WHITE)
+                        .setMenuColor(Color.WHITE)
+                        .setOnMenuItemClickListener(onMenuItemClickListener)
+                        .build();
+                powerMenu.showAsDropDown(view, -5, 0);
+            } else {
                 Intent start = new Intent(MainActivity.this, TimetablesActivity.class);
 
                 if (spinner.getSelectedItem().toString().equals(getString(R.string.school_hours))) {
@@ -509,13 +507,13 @@ public class MainActivity extends AppCompatActivity {
             }
 
         } else {
-                Snackbar snack = Snackbar.make(coordinatorLayout,
-                        getString(R.string.errorconnection), Snackbar.LENGTH_SHORT).setAnchorView(R.id.layout);
-                SnackbarMaterial.configSnackbar(this, snack);
-                snack.show();
+            Snackbar snack = Snackbar.make(coordinatorLayout,
+                    getString(R.string.errorconnection), Snackbar.LENGTH_SHORT).setAnchorView(R.id.layout);
+            SnackbarMaterial.configSnackbar(this, snack);
+            snack.show();
 
-            }
         }
+    }
 
     public void vibrator() {
 
